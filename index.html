@@ -25,7 +25,6 @@
         body.dark-mode .belum { background: #3a1111; }
         .tgl { font-size: 9px; display: block; margin-top: 5px; font-style: italic; opacity: 0.8; }
         
-        /* CSS Tambahan untuk Info Kas */
         .kas-info { background: var(--card-bg); padding: 20px; border-radius: 15px; margin-top: 25px; text-align: center; border: 1px solid #ddd; }
         .kas-info h2 { margin: 5px 0; color: var(--primary); font-size: 28px; }
         .detail-pengeluaran { text-align: left; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #ccc; }
@@ -57,12 +56,12 @@
     <div id="gridBulan" class="grid"></div>
 
     <div class="kas-info">
-        <small>Total Kas Terkumpul (2026)</small>
+        <small>Total Kas (Termasuk Saldo Bulan Lalu)</small>
         <h2 id="totalKas">Rp 0</h2>
 
         <div class="detail-pengeluaran">
-            <small style="font-weight: bold; color: var(--danger);">PENGELUARAN BULAN INI:</small>
-            <div id="listKeluar" style="font-size: 13px; margin: 5px 0; font-style: italic;">Memuat data...</div>
+            <small style="font-weight: bold; color: var(--danger);">RINCIAN KEUANGAN:</small>
+            <div id="listKeluar" style="font-size: 13px; margin: 8px 0; line-height: 1.6;">Memuat data...</div>
             
             <div class="sisa-box">
                 <span style="font-weight: bold;">SISA SALDO:</span>
@@ -107,49 +106,64 @@
             const rawData = await resp.text();
             window.db = parseCSV(rawData);
 
+            // Pengumuman
             if (window.db[1] && window.db[1][4]) {
                 document.getElementById('pBox').style.display = 'block';
                 document.getElementById('pIsi').innerText = window.db[1][4];
             }
 
-            // HITUNG TOTAL KAS
-            let total = 0;
+            // 1. AMBIL SALDO AWAL (Kolom H Baris 2)
+            let saldoAwal = 0;
+            if (window.db[1] && window.db[1][7]) {
+                saldoAwal = parseInt(window.db[1][7].replace(/[^0-9]/g, '')) || 0;
+            }
+
+            // 2. HITUNG IURAN BARU (Kolom D)
+            let iuranBaru = 0;
             for(let i=1; i < window.db.length; i++) {
                 if(window.db[i][3]) {
                     let nom = parseInt(window.db[i][3].replace(/[^0-9]/g, '')) || 0;
-                    total += nom;
+                    iuranBaru += nom;
                 }
             }
-            document.getElementById('totalKas').innerText = "Rp " + total.toLocaleString('id-ID');
 
-            // AMBIL DATA PENGELUARAN (KOLOM F & G BARIS 2)
-            if (window.db[1]) {
-                let rincian = window.db[1][5] || "Belum ada pengeluaran";
-                let nominalKeluar = parseInt(window.db[1][6].replace(/[^0-9]/g, '')) || 0;
-                let sisa = total - nominalKeluar;
+            let totalKotor = saldoAwal + iuranBaru;
+            document.getElementById('totalKas').innerText = "Rp " + totalKotor.toLocaleString('id-ID');
 
-                // Menampilkan teks rincian DAN nominal pengeluaran di bawahnya
-                document.getElementById('listKeluar').innerHTML = `
-                    ${rincian} <br> 
-                    <strong style="color:var(--danger)">- Rp ${nominalKeluar.toLocaleString('id-ID')}</strong>
-                `;
-                
-                document.getElementById('sisaKas').innerText = "Rp " + sisa.toLocaleString('id-ID');
+            // 3. RINCIAN (Saldo Awal + Pengeluaran Dinamis Kolom F & G)
+            let rincianHTML = "";
+            let totalKeluar = 0;
+
+            if (saldoAwal > 0) {
+                rincianHTML += `• Saldo Bulan Lalu: <span style="color:var(--primary)">Rp ${saldoAwal.toLocaleString('id-ID')}</span><br>`;
             }
 
-        } catch (err) { console.error("Gagal ambil data"); }
+            for (let i = 1; i < window.db.length; i++) {
+                let teksKeluar = window.db[i][5];
+                let angkaKeluar = window.db[i][6];
+                if (teksKeluar && teksKeluar.trim() !== "") {
+                    let nomKeluar = parseInt(angkaKeluar.replace(/[^0-9]/g, '')) || 0;
+                    totalKeluar += nomKeluar;
+                    rincianHTML += `• ${teksKeluar} (<span style="color:var(--danger)">-Rp ${nomKeluar.toLocaleString('id-ID')}</span>)<br>`;
+                }
+            }
+
+            document.getElementById('listKeluar').innerHTML = rincianHTML || "Belum ada catatan keuangan.";
+            
+            // 4. SISA SALDO AKHIR
+            let sisaSaldo = totalKotor - totalKeluar;
+            document.getElementById('sisaKas').innerText = "Rp " + sisaSaldo.toLocaleString('id-ID');
+
+        } catch (err) { console.error("Gagal memuat"); }
     }
 
     function cariData() {
         const query = document.getElementById('inNama').value.toLowerCase().trim();
         const grid = document.getElementById('gridBulan');
         const head = document.getElementById('resHead');
-
         if (query.length < 3) { grid.innerHTML = ""; head.style.display = "none"; return; }
-
         let matches = [];
         let displayNama = "";
-
         window.db.forEach((row, idx) => {
             if (idx === 0) return;
             if (row[1] && row[1].toLowerCase().includes(query)) {
@@ -157,13 +171,11 @@
                 displayNama = row[1].toUpperCase(); 
             }
         });
-
         if (matches.length > 0) {
             head.style.display = "block";
             document.getElementById('resNama').innerText = displayNama;
             const bulanArr = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
             grid.innerHTML = "";
-            
             bulanArr.forEach(b => {
                 const bayar = matches.find(m => m.bulan && m.bulan.toLowerCase() === b.toLowerCase());
                 const div = document.createElement('div');
@@ -181,7 +193,6 @@
             head.style.display = "none";
         }
     }
-
     init();
 </script>
 </body>
