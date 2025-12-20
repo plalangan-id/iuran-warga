@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cek Iuran Warga Kampung</title>
+    <style>
+        :root {
+            --primary: #2ecc71;
+            --danger: #e74c3c;
+            --bg: #f4f7f6;
+            --white: #ffffff;
+            --text: #2c3e50;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 15px;
+        }
+
+        .container { max-width: 500px; margin: auto; }
+
+        header { text-align: center; margin-bottom: 25px; }
+        h2 { margin-bottom: 5px; color: var(--text); }
+        .subtitle { font-size: 14px; color: #7f8c8d; }
+
+        /* Card Cari */
+        .search-card {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            font-size: 16px;
+            box-sizing: border-box;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        input:focus { border-color: var(--primary); }
+
+        /* Grid Kartu Bulanan */
+        .grid-bulan {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .card-bulan {
+            background: var(--white);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            border-bottom: 4px solid #ddd;
+            transition: 0.3s;
+        }
+
+        /* Status Belum Bayar */
+        .card-bulan.status-tagihan {
+            border-bottom-color: var(--danger);
+        }
+        .status-tagihan .status-label { color: var(--danger); font-weight: bold; }
+
+        /* Status Lunas */
+        .card-bulan.status-lunas {
+            border-bottom-color: var(--primary);
+            background: #f0fff4;
+        }
+        .status-lunas .status-label { color: var(--primary); font-weight: bold; }
+
+        .nama-bulan { display: block; font-size: 16px; font-weight: 700; margin-bottom: 5px; }
+        .status-label { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        .nominal { display: block; font-size: 13px; color: #95a5a6; margin-top: 5px; }
+
+        .hasil-cari { margin-top: 10px; }
+        .info-warga { padding: 10px; font-weight: bold; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h2>IURAN KAMPUNG</h2>
+        <p class="subtitle">Cek status pembayaran iuran bulanan Anda</p>
+    </header>
+
+    <div class="search-card">
+        <label style="font-size: 12px; font-weight: bold; margin-bottom: 8px; display: block;">MASUKKAN NAMA WARGA:</label>
+        <input type="text" id="inputNama" placeholder="Contoh: Pak Budi" onkeyup="cariTagihan()">
+    </div>
+
+    <div id="infoWarga" class="info-warga">Menampilkan iuran untuk: <span id="namaTerpilih" style="color: var(--primary);"></span></div>
+
+    <div class="grid-bulan" id="containerBulan">
+        </div>
+</div>
+
+<script>
+    // Data Contoh (Nanti bisa dihubungkan ke database/Google Sheets)
+    const dataIuran = [
+        { bulan: "Januari", status: "lunas", nominal: "20.000" },
+        { bulan: "Februari", status: "lunas", nominal: "20.000" },
+        { bulan: "Maret", status: "tagihan", nominal: "20.000" },
+        { bulan: "April", status: "tagihan", nominal: "20.000" },
+        { bulan: "Mei", status: "tagihan", nominal: "20.000" },
+        { bulan: "Juni", status: "tagihan", nominal: "20.000" }
+    ];
+
+    function cariTagihan() {
+        const input = document.getElementById('inputNama').value;
+        const container = document.getElementById('containerBulan');
+        const info = document.getElementById('infoWarga');
+        const namaSpan = document.getElementById('namaTerpilih');
+
+        if (input.length < 3) {
+            container.innerHTML = "";
+            info.style.display = "none";
+            return;
+        }
+
+        info.style.display = "block";
+        namaSpan.innerText = input;
+        container.innerHTML = "";
+
+        dataIuran.forEach(item => {
+            const card = document.createElement('div');
+            card.className = `card-bulan status-${item.status}`;
+            
+            const labelStatus = item.status === "lunas" ? "✓ LUNAS" : "✘ BELUM BAYAR";
+
+            card.innerHTML = `
+                <span class="nama-bulan">${item.bulan}</span>
+                <span class="status-label">${labelStatus}</span>
+                <span class="nominal">Rp ${item.nominal}</span>
+            `;
+            container.appendChild(card);
+        });
+    }
+</script>
+
+</body>
+</html>
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Iuran - Scan Mode</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        :root { --primary: #27ae60; --bg: #f4f7f6; --dark: #2c3e50; }
+        body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 15px; }
+        .container { max-width: 500px; margin: auto; }
+        .card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        
+        /* Area Scanner */
+        #reader {
+            width: 100%;
+            border-radius: 10px;
+            overflow: hidden;
+            border: none !important;
+            margin-bottom: 15px;
+        }
+        
+        label { display: block; font-weight: bold; margin-top: 15px; font-size: 13px; color: var(--dark); }
+        input, select { 
+            width: 100%; padding: 12px; margin-top: 5px; 
+            border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; 
+            background: #f9f9f9; font-size: 16px;
+        }
+
+        .btn-scan {
+            background: #3498db; color: white; border: none; padding: 10px;
+            border-radius: 8px; width: 100%; font-weight: bold; margin-bottom: 10px;
+            cursor: pointer;
+        }
+
+        .btn-save { 
+            width: 100%; padding: 15px; background: var(--primary); 
+            color: white; border: none; border-radius: 8px; 
+            font-weight: bold; margin-top: 20px; cursor: pointer; font-size: 16px;
+        }
+        
+        .success-flash {
+            background: #d4f8e2; color: #27ae60; padding: 10px;
+            border-radius: 8px; text-align: center; margin-bottom: 10px;
+            display: none; font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2 style="text-align: center; color: var(--dark);">PANEL PENGURUS</h2>
+    
+    <div id="flash-msg" class="success-flash">NAMA BERHASIL DISCAN!</div>
+
+    <div class="card">
+        <h3>Input Pembayaran</h3>
+        
+        <div id="reader"></div>
+        <button class="btn-scan" onclick="startScanner()">BUKA KAMERA SCANNER</button>
+        
+        <label>Nama Warga (Hasil Scan)</label>
+        <input type="text" id="adminNama" placeholder="Nama akan muncul di sini..." readonly>
+        
+        <label>Bulan Iuran</label>
+        <select id="adminBulan">
+            <option>Januari</option><option>Februari</option><option>Maret</option>
+            <option>April</option><option>Mei</option><option>Juni</option>
+            <option>Juli</option><option>Agustus</option><option>September</option>
+            <option>Oktober</option><option>November</option><option>Desember</option>
+        </select>
+
+        <label>Jumlah (Rp)</label>
+        <input type="number" id="adminJumlah" value="20000">
+
+        <button class="btn-save" onclick="simpanData()">SIMPAN PEMBAYARAN</button>
+    </div>
+</div>
+
+<script>
+    const html5QrCode = new Html5Qrcode("reader");
+    const flashMsg = document.getElementById('flash-msg');
+
+    function startScanner() {
+        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+        
+        html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
+            // Jika berhasil scan
+            document.getElementById('adminNama').value = decodedText;
+            
+            // Beri efek notifikasi
+            flashMsg.style.display = "block";
+            setTimeout(() => { flashMsg.style.display = "none"; }, 3000);
+            
+            // Matikan kamera setelah scan berhasil agar hemat baterai
+            html5QrCode.stop();
+        }).catch((err) => {
+            console.error("Gagal buka kamera:", err);
+        });
+    }
+
+    function simpanData() {
+        const nama = document.getElementById('adminNama').value;
+        if(!nama) return alert("Scan barcode warga dulu!");
+        
+        alert("Data " + nama + " berhasil disimpan ke sistem!");
+        
+        // Kosongkan nama setelah simpan
+        document.getElementById('adminNama').value = "";
+    }
+</script>
+</body>
+</html>
