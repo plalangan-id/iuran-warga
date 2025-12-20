@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Cetak QR Code Warga</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f0f0f0; }
+        .no-print { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        textarea { width: 100%; height: 100px; margin-top: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        
+        /* Pengaturan Layout Cetak */
+        .grid-container { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); 
+            gap: 10px; 
+            background: white; 
+            padding: 10px;
+        }
+
+        .qr-card { 
+            border: 1px solid #ddd; 
+            padding: 10px; 
+            text-align: center; 
+            border-radius: 5px;
+            background: white;
+            page-break-inside: avoid;
+        }
+
+        .qr-card img { width: 80px; height: 80px; }
+        .qr-card p { font-size: 10px; margin: 5px 0 0 0; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        @media print {
+            .no-print { display: none; }
+            body { background: white; padding: 0; }
+            .grid-container { gap: 5px; }
+            .qr-card { border: 1px solid #eee; }
+        }
+        
+        button { background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        button:hover { background: #219150; }
+    </style>
+</head>
+<body>
+
+<div class="no-print">
+    <h2>Generator QR Code Masal</h2>
+    <p>Masukkan daftar nama warga (pisahkan dengan baris baru/Enter):</p>
+    <textarea id="daftarNama" placeholder="Contoh:&#10;Budi Santoso&#10;Ahmad Fauzi&#10;Siti Aminah"></textarea>
+    <button onclick="generateQR()">Buat QR Code</button>
+    <button onclick="window.print()" style="background: #3498db;">Cetak / Save PDF</button>
+</div>
+
+<div class="grid-container" id="printArea">
+    </div>
+
+<script>
+    function generateQR() {
+        const text = document.getElementById('daftarNama').value;
+        const names = text.split('\n');
+        const container = document.getElementById('printArea');
+        container.innerHTML = '';
+
+        names.forEach(name => {
+            if (name.trim() !== "") {
+                const card = document.createElement('div');
+                card.className = 'qr-card';
+                
+                // Menggunakan API QR Server
+                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(name.trim())}`;
+                
+                card.innerHTML = `
+                    <img src="${qrUrl}" alt="QR">
+                    <p>${name.trim().toUpperCase()}</p>
+                `;
+                container.appendChild(card);
+            }
+        });
+    }
+</script>
+
+</body>
+</html>
