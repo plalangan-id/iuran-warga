@@ -17,13 +17,16 @@
         .search-area { background: var(--card-bg); padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
         input { width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 10px; font-size: 18px; text-align: center; background: var(--card-bg); color: var(--text); box-sizing: border-box; outline: none; }
         .result-head { text-align: center; margin-bottom: 15px; display: none; padding: 15px; background: var(--card-bg); border-radius: 12px; border-bottom: 4px solid var(--primary); }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .card { background: var(--card-bg); padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 2px solid transparent; }
+        
+        /* Grid 4 Kolom (3 Baris) */
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .card { background: var(--card-bg); padding: 8px 5px; border-radius: 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 2px solid transparent; }
+        
         .lunas { border-color: var(--primary); background: #ebfaef; color: var(--primary); }
         body.dark-mode .lunas { background: #0a2e17; }
         .belum { border-color: var(--danger); background: #fdf2f2; color: var(--danger); }
         body.dark-mode .belum { background: #3a1111; }
-        .tgl { font-size: 9px; display: block; margin-top: 5px; font-style: italic; opacity: 0.8; }
+        .tgl { font-size: 7px; display: block; margin-top: 3px; font-style: italic; opacity: 0.8; }
         
         .kas-info { background: var(--card-bg); padding: 20px; border-radius: 15px; margin-top: 25px; text-align: center; border: 1px solid #ddd; }
         .kas-info h2 { margin: 5px 0; color: var(--primary); font-size: 28px; }
@@ -106,19 +109,16 @@
             const rawData = await resp.text();
             window.db = parseCSV(rawData);
 
-            // Pengumuman
             if (window.db[1] && window.db[1][4]) {
                 document.getElementById('pBox').style.display = 'block';
                 document.getElementById('pIsi').innerText = window.db[1][4];
             }
 
-            // 1. AMBIL SALDO AWAL (Kolom H Baris 2)
             let saldoAwal = 0;
             if (window.db[1] && window.db[1][7]) {
                 saldoAwal = parseInt(window.db[1][7].replace(/[^0-9]/g, '')) || 0;
             }
 
-            // 2. HITUNG IURAN BARU (Kolom D)
             let iuranBaru = 0;
             for(let i=1; i < window.db.length; i++) {
                 if(window.db[i][3]) {
@@ -130,7 +130,6 @@
             let totalKotor = saldoAwal + iuranBaru;
             document.getElementById('totalKas').innerText = "Rp " + totalKotor.toLocaleString('id-ID');
 
-            // 3. RINCIAN (Saldo Awal + Pengeluaran Dinamis Kolom F & G)
             let rincianHTML = "";
             let totalKeluar = 0;
 
@@ -149,8 +148,6 @@
             }
 
             document.getElementById('listKeluar').innerHTML = rincianHTML || "Belum ada catatan keuangan.";
-            
-            // 4. SISA SALDO AKHIR
             let sisaSaldo = totalKotor - totalKeluar;
             document.getElementById('sisaKas').innerText = "Rp " + sisaSaldo.toLocaleString('id-ID');
 
@@ -174,22 +171,26 @@
         if (matches.length > 0) {
             head.style.display = "block";
             document.getElementById('resNama').innerText = displayNama;
-            const bulanArr = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            
+            // Nama bulan disingkat agar pas di kotak kecil
+            const bulanArr = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
+            const bulanFull = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            
             grid.innerHTML = "";
-            bulanArr.forEach(b => {
-                const bayar = matches.find(m => m.bulan && m.bulan.toLowerCase() === b.toLowerCase());
+            bulanArr.forEach((b, index) => {
+                const bayar = matches.find(m => m.bulan && m.bulan.toLowerCase() === bulanFull[index].toLowerCase());
                 const div = document.createElement('div');
                 div.className = `card ${bayar ? 'lunas' : 'belum'}`;
                 div.innerHTML = `
-                    <div style="font-size:13px; font-weight:bold">${b}</div>
-                    <div style="font-size:24px; margin:5px 0">${bayar ? '✅' : '❌'}</div>
-                    <div style="font-size:11px; font-weight:bold">${bayar ? 'LUNAS' : 'BELUM'}</div>
+                    <div style="font-size:10px; font-weight:bold">${b}</div>
+                    <div style="font-size:18px; margin:3px 0">${bayar ? '✅' : '❌'}</div>
+                    <div style="font-size:8px; font-weight:bold">${bayar ? 'LUNAS' : 'BELUM'}</div>
                     ${bayar ? `<span class="tgl">${bayar.tanggal}</span>` : ''}
                 `;
                 grid.appendChild(div);
             });
         } else {
-            grid.innerHTML = "<p style='grid-column: span 2; text-align: center; color: var(--danger);'>Nama tidak ditemukan</p>";
+            grid.innerHTML = "<p style='grid-column: span 4; text-align: center; color: var(--danger); font-size:12px;'>Nama tidak ditemukan</p>";
             head.style.display = "none";
         }
     }
