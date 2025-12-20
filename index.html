@@ -108,12 +108,12 @@
 <script>
     // Data Contoh (Nanti bisa dihubungkan ke database/Google Sheets)
     const dataIuran = [
-        { bulan: "Januari", status: "lunas", nominal: "20.000" },
-        { bulan: "Februari", status: "lunas", nominal: "20.000" },
-        { bulan: "Maret", status: "tagihan", nominal: "20.000" },
-        { bulan: "April", status: "tagihan", nominal: "20.000" },
-        { bulan: "Mei", status: "tagihan", nominal: "20.000" },
-        { bulan: "Juni", status: "tagihan", nominal: "20.000" }
+        { bulan: "Januari", status: "lunas", nominal: "15.000" },
+        { bulan: "Februari", status: "lunas", nominal: "15.000" },
+        { bulan: "Maret", status: "tagihan", nominal: "15.000" },
+        { bulan: "April", status: "tagihan", nominal: "15.000" },
+        { bulan: "Mei", status: "tagihan", nominal: "15.000" },
+        { bulan: "Juni", status: "tagihan", nominal: "15.000" }
     ];
 
     function cariTagihan() {
@@ -200,67 +200,3 @@
     </style>
 </head>
 <body>
-
-<div class="container">
-    <h2 style="text-align: center; color: var(--dark);">PANEL PENGURUS</h2>
-    
-    <div id="flash-msg" class="success-flash">NAMA BERHASIL DISCAN!</div>
-
-    <div class="card">
-        <h3>Input Pembayaran</h3>
-        
-        <div id="reader"></div>
-        <button class="btn-scan" onclick="startScanner()">BUKA KAMERA SCANNER</button>
-        
-        <label>Nama Warga (Hasil Scan)</label>
-        <input type="text" id="adminNama" placeholder="Nama akan muncul di sini..." readonly>
-        
-        <label>Bulan Iuran</label>
-        <select id="adminBulan">
-            <option>Januari</option><option>Februari</option><option>Maret</option>
-            <option>April</option><option>Mei</option><option>Juni</option>
-            <option>Juli</option><option>Agustus</option><option>September</option>
-            <option>Oktober</option><option>November</option><option>Desember</option>
-        </select>
-
-        <label>Jumlah (Rp)</label>
-        <input type="number" id="adminJumlah" value="20000">
-
-        <button class="btn-save" onclick="simpanData()">SIMPAN PEMBAYARAN</button>
-    </div>
-</div>
-
-<script>
-    const html5QrCode = new Html5Qrcode("reader");
-    const flashMsg = document.getElementById('flash-msg');
-
-    function startScanner() {
-        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-        
-        html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
-            // Jika berhasil scan
-            document.getElementById('adminNama').value = decodedText;
-            
-            // Beri efek notifikasi
-            flashMsg.style.display = "block";
-            setTimeout(() => { flashMsg.style.display = "none"; }, 3000);
-            
-            // Matikan kamera setelah scan berhasil agar hemat baterai
-            html5QrCode.stop();
-        }).catch((err) => {
-            console.error("Gagal buka kamera:", err);
-        });
-    }
-
-    function simpanData() {
-        const nama = document.getElementById('adminNama').value;
-        if(!nama) return alert("Scan barcode warga dulu!");
-        
-        alert("Data " + nama + " berhasil disimpan ke sistem!");
-        
-        // Kosongkan nama setelah simpan
-        document.getElementById('adminNama').value = "";
-    }
-</script>
-</body>
-</html>
