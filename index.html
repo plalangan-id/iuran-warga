@@ -24,8 +24,13 @@
         .belum { border-color: var(--danger); background: #fdf2f2; color: var(--danger); }
         body.dark-mode .belum { background: #3a1111; }
         .tgl { font-size: 9px; display: block; margin-top: 5px; font-style: italic; opacity: 0.8; }
+        
+        /* CSS Tambahan untuk Info Kas */
         .kas-info { background: var(--card-bg); padding: 20px; border-radius: 15px; margin-top: 25px; text-align: center; border: 1px solid #ddd; }
         .kas-info h2 { margin: 5px 0; color: var(--primary); font-size: 28px; }
+        .detail-pengeluaran { text-align: left; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #ccc; }
+        .sisa-box { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding: 10px; background: #e8f4fd; border-radius: 8px; color: #2980b9; }
+        body.dark-mode .sisa-box { background: #1a2a3a; color: #3498db; }
     </style>
 </head>
 <body>
@@ -54,13 +59,22 @@
     <div class="kas-info">
         <small>Total Kas Terkumpul (2026)</small>
         <h2 id="totalKas">Rp 0</h2>
+
+        <div class="detail-pengeluaran">
+            <small style="font-weight: bold; color: var(--danger);">PENGELUARAN BULAN INI:</small>
+            <div id="listKeluar" style="font-size: 13px; margin: 5px 0; font-style: italic;">Memuat data...</div>
+            
+            <div class="sisa-box">
+                <span style="font-weight: bold;">SISA SALDO:</span>
+                <span id="sisaKas" style="font-size: 18px; font-weight: bold;">Rp 0</span>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
     const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSqOacaVgTEVIQdIOgsacKIqQtqfTqUH5F_UMoI5R6ci5fxg2Px6BHrdlfntfdR7Md7Z3TshmUHtG7V/pub?gid=0&single=true&output=csv';
 
-    // FUNGSI BARU: Cek status saat web dibuka
     function cekModeTersimpan() {
         const statusMode = localStorage.getItem('darkMode');
         if (statusMode === 'aktif') {
@@ -72,8 +86,6 @@
     function gantiMode() {
         document.body.classList.toggle('dark-mode');
         const isDark = document.body.classList.contains('dark-mode');
-        
-        // Simpan ke memori browser
         if (isDark) {
             localStorage.setItem('darkMode', 'aktif');
             document.getElementById('txtM').innerText = "☀️ Mode Terang";
@@ -89,7 +101,7 @@
     }
 
     async function init() {
-        cekModeTersimpan(); // Jalankan cek mode
+        cekModeTersimpan();
         try {
             const resp = await fetch(csvUrl + '&v=' + new Date().getTime());
             const rawData = await resp.text();
@@ -100,6 +112,7 @@
                 document.getElementById('pIsi').innerText = window.db[1][4];
             }
 
+            // HITUNG TOTAL KAS
             let total = 0;
             for(let i=1; i < window.db.length; i++) {
                 if(window.db[i][3]) {
@@ -108,6 +121,17 @@
                 }
             }
             document.getElementById('totalKas').innerText = "Rp " + total.toLocaleString('id-ID');
+
+            // AMBIL DATA PENGELUARAN (KOLOM F & G BARIS 2)
+            if (window.db[1]) {
+                let rincian = window.db[1][5] || "Belum ada pengeluaran";
+                let nominalKeluar = parseInt(window.db[1][6].replace(/[^0-9]/g, '')) || 0;
+                let sisa = total - nominalKeluar;
+
+                document.getElementById('listKeluar').innerText = rincian;
+                document.getElementById('sisaKas').innerText = "Rp " + sisa.toLocaleString('id-ID');
+            }
+
         } catch (err) { console.error("Gagal ambil data"); }
     }
 
