@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cek Iuran Warga</title>
     <style>
-        :root { --primary: #2ecc71; --bg: #f4f7f6; --text: #2c3e50; }
+        :root { --primary: #2ecc71; --danger: #e74c3c; --bg: #f4f7f6; --text: #2c3e50; }
         body { background-color: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 15px; }
         .container { max-width: 500px; margin: auto; }
         header { text-align: center; margin-bottom: 20px; }
@@ -13,9 +13,16 @@
         input { width: 100%; padding: 15px; border: 2px solid #eee; border-radius: 12px; font-size: 16px; box-sizing: border-box; outline: none; text-align: center; }
         input:focus { border-color: var(--primary); }
         .grid-bulan { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .card-bulan { background: #f0fff4; padding: 15px; border-radius: 12px; text-align: center; border-bottom: 4px solid var(--primary); }
+        
+        /* Style untuk LUNAS */
+        .card-lunas { background: #f0fff4; padding: 15px; border-radius: 12px; text-align: center; border-bottom: 4px solid var(--primary); }
+        .card-lunas .status-label { color: var(--primary); font-weight: bold; font-size: 12px; }
+        
+        /* Style untuk BELUM BAYAR */
+        .card-belum { background: #fff5f5; padding: 15px; border-radius: 12px; text-align: center; border-bottom: 4px solid var(--danger); opacity: 0.8; }
+        .card-belum .status-label { color: var(--danger); font-weight: bold; font-size: 12px; }
+        
         .nama-bulan { display: block; font-size: 16px; font-weight: 700; }
-        .status-label { font-size: 12px; color: var(--primary); font-weight: bold; }
         .info-warga { padding: 10px; font-weight: bold; display: none; background: #e8f8f5; border-radius: 8px; margin-bottom: 15px; text-align: center; }
         .loading-text { text-align: center; font-style: italic; color: #7f8c8d; display: none; }
     </style>
@@ -25,7 +32,7 @@
 <div class="container">
     <header>
         <h2>IURAN KAMPUNG</h2>
-        <p>Cek status pembayaran iuran</p>
+        <p>Cek status pembayaran iuran 2026</p>
     </header>
 
     <div class="search-card">
@@ -46,7 +53,7 @@
         const info = document.getElementById('infoWarga');
         const loading = document.getElementById('loading');
 
-        if (input.length < 2) {
+        if (input.length < 3) {
             container.innerHTML = "";
             info.style.display = "none";
             return;
@@ -60,37 +67,56 @@
             const rows = dataText.split(/\r?\n/);
             
             container.innerHTML = "";
-            let ketemu = false;
+            let dataDitemukan = [];
+            let namaWargaAsli = "";
 
+            // 1. Kumpulkan semua data yang cocok dengan nama
             for (let i = 1; i < rows.length; i++) {
                 if (!rows[i]) continue;
-                
-                // Pisahkan kolom
                 const cols = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/"/g, '').trim());
-
-                // Sesuaikan urutan: Tanggal(0), Nama(1), Bulan(2), Jumlah(3)
-                const namaDiSheet = cols[1] ? cols[1].toLowerCase() : "";
                 
+                const namaDiSheet = cols[1] ? cols[1].toLowerCase() : "";
                 if (namaDiSheet.includes(input)) {
-                    ketemu = true;
-                    info.style.display = "block";
-                    document.getElementById('namaTerpilih').innerText = cols[1].toUpperCase();
-
-                    const card = document.createElement('div');
-                    card.className = 'card-bulan';
-                    card.innerHTML = `
-                        <span class="nama-bulan">${cols[2] || 'Januari'}</span>
-                        <span class="status-label">✓ LUNAS</span>
-                        <br><small>Rp ${cols[3] || '15.000'}</small>
-                    `;
-                    container.appendChild(card);
+                    dataDitemukan.push(cols);
+                    namaWargaAsli = cols[1].toUpperCase(); // Ambil nama asli dari sheet
                 }
             }
 
-            loading.style.display = "none";
-            if (!ketemu) {
-                container.innerHTML = "<p style='grid-column: span 2; text-align: center;'>Data tidak ditemukan.</p>";
+            if (dataDitemukan.length > 0) {
+                loading.style.display = "none";
+                info.style.display = "block";
+                document.getElementById('namaTerpilih').innerText = namaWargaAsli;
+
+                // 2. Daftar bulan standar
+                const semuaBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+                
+                // 3. Cek per bulan
+                semuaBulan.forEach(bulan => {
+                    // Cari apakah bulan ini ada di data iuran warga tersebut
+                    const bayar = dataDitemukan.find(d => d[2] === bulan);
+                    const card = document.createElement('div');
+
+                    if (bayar) {
+                        card.className = 'card-lunas';
+                        card.innerHTML = `
+                            <span class="nama-bulan">${bulan}</span>
+                            <span class="status-label">✓ LUNAS</span>
+                            <br><small>Rp ${bayar[3] || '15.000'}</small>
+                        `;
+                    } else {
+                        card.className = 'card-belum';
+                        card.innerHTML = `
+                            <span class="nama-bulan">${bulan}</span>
+                            <span class="status-label">❌ BELUM BAYAR</span>
+                        `;
+                    }
+                    container.appendChild(card);
+                });
+
+            } else {
+                loading.style.display = "none";
                 info.style.display = "none";
+                container.innerHTML = "<p style='grid-column: span 2; text-align: center;'>Nama tidak ditemukan.</p>";
             }
 
         } catch (e) {
