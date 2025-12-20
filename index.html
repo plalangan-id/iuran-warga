@@ -4,46 +4,78 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iuran Dsn. Plalangan-2026</title>
+    
+    <link rel="icon" type="image/png" sizes="192x192" href="https://cdn-icons-png.flaticon.com/512/1160/1160329.png">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1160/1160329.png">
+    
+    <meta name="theme-color" content="#27ae60">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Iuran Plalangan">
+
     <style>
         :root { --primary: #27ae60; --danger: #e74c3c; --bg: #f4f7f6; }
         body { background-color: var(--bg); font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 15px; }
         .container { max-width: 600px; margin: auto; }
+        
         header { text-align: center; margin-bottom: 25px; }
         header h2 { margin-bottom: 5px; color: #2c3e50; font-size: 26px; }
         header p { margin: 0; color: #7f8c8d; font-size: 18px; font-weight: bold; }
+
         .search-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 25px; }
         input { width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 10px; font-size: 18px; box-sizing: border-box; outline: none; text-align: center; font-weight: bold; }
         input:focus { border-color: var(--primary); }
+
         .info-warga { text-align: center; margin-bottom: 20px; display: none; padding: 20px; background: white; border-radius: 12px; border-bottom: 5px solid var(--primary); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         .info-warga p { margin: 0; font-size: 14px; color: #7f8c8d; text-transform: uppercase; letter-spacing: 1px; }
         .info-warga h3 { margin: 8px 0 0 0; color: #2c3e50; font-size: 24px; font-weight: 800; }
+
         .grid-kalender { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-        .box-bulan { background: white; padding: 20px 10px; border-radius: 12px; text-align: center; box-shadow: 0 3px 6px rgba(0,0,0,0.08); display: flex; flex-direction: column; justify-content: center; transition: 0.3s; }
+
+        .box-bulan {
+            background: white; padding: 20px 10px; border-radius: 12px; text-align: center;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.08); display: flex; flex-direction: column;
+            justify-content: center; transition: 0.3s;
+        }
+
         .bulan-nama { font-size: 16px; font-weight: 800; text-transform: uppercase; margin-bottom: 5px; }
         .status-ikon { font-size: 28px; margin: 5px 0; }
         .status-teks { font-size: 14px; font-weight: 900; letter-spacing: 1px; }
+        
         .lunas { background: #ebfaef; border: 2px solid var(--primary); }
         .lunas .bulan-nama, .lunas .status-ikon, .lunas .status-teks { color: var(--primary); }
+
         .belum { background: #fdf2f2; border: 2px solid var(--danger); }
         .belum .bulan-nama, .belum .status-ikon, .belum .status-teks { color: var(--danger); }
+
         .loading { text-align: center; display: none; color: #7f8c8d; font-weight: bold; padding: 20px; }
+        .footer-note { text-align: center; font-size: 12px; color: #aaa; margin-top: 30px; }
     </style>
 </head>
 <body>
+
 <div class="container">
     <header>
         <h2>STATUS IURAN 2026</h2>
         <p>Dsn. Plalangan</p>
     </header>
+
     <div class="search-card">
         <input type="text" id="inputNama" placeholder="KETIK NAMA ANDA..." onkeyup="cariTagihan()">
     </div>
+
     <div id="loading" class="loading">Mengecek Database...</div>
+
     <div id="infoWarga" class="info-warga">
         <p>Nama Pembayar:</p>
         <h3 id="namaTerpilih"></h3>
     </div>
+
     <div class="grid-kalender" id="containerBulan"></div>
+    
+    <div class="footer-note">
+        &copy; 2026 Iuran Dsn. Plalangan <br>
+        Klik titik tiga di browser dan pilih "Tambahkan ke Layar Utama"
+    </div>
 </div>
 
 <script>
@@ -74,9 +106,7 @@
 
             rows.forEach((row, index) => {
                 if(index === 0) return;
-                // Perbaikan regex pemisah koma
                 const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/"/g, '').trim());
-                
                 if(cols[1] && cols[1].toLowerCase().includes(input)) {
                     dataWarga.push(cols[2]); 
                     namaAsli = cols[1].toUpperCase();
@@ -94,7 +124,6 @@
                 bulanList.forEach(bulan => {
                     const isLunas = dataWarga.includes(bulan);
                     const card = document.createElement('div');
-                    // Perbaikan penulisan className
                     card.className = `box-bulan ${isLunas ? 'lunas' : 'belum'}`;
                     
                     card.innerHTML = `
