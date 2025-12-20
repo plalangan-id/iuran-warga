@@ -3,84 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cek Iuran Warga Kampung</title>
+    <title>Cek Iuran Warga</title>
     <style>
-        :root {
-            --primary: #2ecc71;
-            --danger: #e74c3c;
-            --bg: #f4f7f6;
-            --white: #ffffff;
-            --text: #2c3e50;
-        }
-
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 15px;
-        }
-
+        :root { --primary: #2ecc71; --bg: #f4f7f6; --text: #2c3e50; }
+        body { background-color: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 15px; }
         .container { max-width: 500px; margin: auto; }
-        header { text-align: center; margin-bottom: 25px; }
-        h2 { margin-bottom: 5px; color: var(--text); }
-        .subtitle { font-size: 14px; color: #7f8c8d; }
-
-        .search-card {
-            background: var(--white);
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-        }
-
-        input {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid #eee;
-            border-radius: 12px;
-            font-size: 16px;
-            box-sizing: border-box;
-            outline: none;
-            transition: 0.3s;
-            text-align: center;
-        }
-
-        input:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(46, 204, 113, 0.2); }
-
-        .grid-bulan {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-top: 10px;
-        }
-
-        .card-bulan {
-            background: #f0fff4;
-            padding: 15px;
-            border-radius: 12px;
-            text-align: center;
-            border-bottom: 4px solid var(--primary);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-
-        .nama-bulan { display: block; font-size: 16px; font-weight: 700; margin-bottom: 5px; color: var(--text); }
-        .status-label { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--primary); font-weight: bold; }
-        .nominal { display: block; font-size: 13px; color: #95a5a6; margin-top: 5px; }
-
-        .info-warga { 
-            padding: 10px; 
-            font-weight: bold; 
-            display: none; 
-            background: #e8f8f5; 
-            border-radius: 8px; 
-            margin-bottom: 15px; 
-            text-align: center;
-            border: 1px dashed var(--primary);
-        }
-
-        .loading-text { text-align: center; font-style: italic; color: #7f8c8d; display: none; margin: 10px 0; }
-        .empty-state { grid-column: span 2; text-align: center; padding: 20px; color: #95a5a6; }
+        header { text-align: center; margin-bottom: 20px; }
+        .search-card { background: #fff; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        input { width: 100%; padding: 15px; border: 2px solid #eee; border-radius: 12px; font-size: 16px; box-sizing: border-box; outline: none; text-align: center; }
+        input:focus { border-color: var(--primary); }
+        .grid-bulan { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .card-bulan { background: #f0fff4; padding: 15px; border-radius: 12px; text-align: center; border-bottom: 4px solid var(--primary); }
+        .nama-bulan { display: block; font-size: 16px; font-weight: 700; }
+        .status-label { font-size: 12px; color: var(--primary); font-weight: bold; }
+        .info-warga { padding: 10px; font-weight: bold; display: none; background: #e8f8f5; border-radius: 8px; margin-bottom: 15px; text-align: center; }
+        .loading-text { text-align: center; font-style: italic; color: #7f8c8d; display: none; }
     </style>
 </head>
 <body>
@@ -88,33 +25,27 @@
 <div class="container">
     <header>
         <h2>IURAN KAMPUNG</h2>
-        <p class="subtitle">Sistem Cek Pembayaran Otomatis</p>
+        <p>Cek status pembayaran iuran</p>
     </header>
 
     <div class="search-card">
-        <label style="font-size: 12px; font-weight: bold; margin-bottom: 10px; display: block; text-align: center;">CARI NAMA WARGA:</label>
-        <input type="text" id="inputNama" placeholder="Ketik nama di sini..." onkeyup="cariTagihan()">
+        <input type="text" id="inputNama" placeholder="Ketik Nama Anda..." onkeyup="cariTagihan()">
     </div>
 
-    <div id="loading" class="loading-text">Menghubungkan ke database...</div>
-    <div id="infoWarga" class="info-warga">Warga: <span id="namaTerpilih" style="color: var(--primary);"></span></div>
-
-    <div class="grid-bulan" id="containerBulan">
-        </div>
+    <div id="loading" class="loading-text">Mencari data...</div>
+    <div id="infoWarga" class="info-warga">Warga: <span id="namaTerpilih"></span></div>
+    <div class="grid-bulan" id="containerBulan"></div>
 </div>
 
 <script>
-    // Link CSV milikmu
     const urlCSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSqOacaVgTEVIQdIOgsacKIqQtqfTqUH5F_UMoI5R6ci5fxg2Px6BHrdlfntfdR7Md7Z3TshmUHtG7V/pub?gid=0&single=true&output=csv';
 
     async function cariTagihan() {
         const input = document.getElementById('inputNama').value.toLowerCase().trim();
         const container = document.getElementById('containerBulan');
         const info = document.getElementById('infoWarga');
-        const namaSpan = document.getElementById('namaTerpilih');
         const loading = document.getElementById('loading');
 
-        // Jika input masih kosong atau cuma 1 huruf
         if (input.length < 2) {
             container.innerHTML = "";
             info.style.display = "none";
@@ -124,64 +55,48 @@
         loading.style.display = "block";
 
         try {
-            // Fetch data dengan anti-cache agar data terbaru selalu terbaca
             const response = await fetch(urlCSV + '&v=' + new Date().getTime());
             const dataText = await response.text();
-            
-            // Pecah berdasarkan baris
             const rows = dataText.split(/\r?\n/);
-            const dataIuran = [];
+            
+            container.innerHTML = "";
+            let ketemu = false;
 
-            // Mulai dari baris ke-2 (index 1) untuk melewati header
             for (let i = 1; i < rows.length; i++) {
                 if (!rows[i]) continue;
                 
-                // Pisahkan kolom (mengantisipasi jika ada tanda kutip)
-                const cols = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                // Pisahkan kolom
+                const cols = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/"/g, '').trim());
+
+                // Sesuaikan urutan: Tanggal(0), Nama(1), Bulan(2), Jumlah(3)
+                const namaDiSheet = cols[1] ? cols[1].toLowerCase() : "";
                 
-                if (cols.length >= 2) {
-                    dataIuran.push({
-                        nama: cols[0].replace(/"/g, '').trim(),
-                        bulan: cols[1].replace(/"/g, '').trim(),
-                        nominal: cols[2] ? cols[2].replace(/"/g, '').trim() : "15.000"
-                    });
-                }
-            }
+                if (namaDiSheet.includes(input)) {
+                    ketemu = true;
+                    info.style.display = "block";
+                    document.getElementById('namaTerpilih').innerText = cols[1].toUpperCase();
 
-            // Filter pencarian
-            const hasilFilter = dataIuran.filter(item => 
-                item.nama.toLowerCase().includes(input)
-            );
-
-            loading.style.display = "none";
-            container.innerHTML = "";
-
-            if (hasilFilter.length === 0) {
-                container.innerHTML = '<div class="empty-state">Data tidak ditemukan.<br>Pastikan penulisan nama benar.</div>';
-                info.style.display = "none";
-            } else {
-                info.style.display = "block";
-                // Tampilkan nama asli dari data pertama yang ditemukan
-                namaSpan.innerText = hasilFilter[0].nama.toUpperCase();
-
-                hasilFilter.forEach(item => {
                     const card = document.createElement('div');
                     card.className = 'card-bulan';
                     card.innerHTML = `
-                        <span class="nama-bulan">${item.bulan}</span>
+                        <span class="nama-bulan">${cols[2] || 'Januari'}</span>
                         <span class="status-label">✓ LUNAS</span>
-                        <span class="nominal">Rp ${item.nominal}</span>
+                        <br><small>Rp ${cols[3] || '15.000'}</small>
                     `;
                     container.appendChild(card);
-                });
+                }
             }
 
-        } catch (error) {
-            console.error("Fetch error:", error);
-            loading.innerText = "Koneksi bermasalah. Coba lagi.";
+            loading.style.display = "none";
+            if (!ketemu) {
+                container.innerHTML = "<p style='grid-column: span 2; text-align: center;'>Data tidak ditemukan.</p>";
+                info.style.display = "none";
+            }
+
+        } catch (e) {
+            loading.innerText = "Gagal memuat data.";
         }
     }
 </script>
-
 </body>
 </html>
