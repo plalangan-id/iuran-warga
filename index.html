@@ -22,12 +22,10 @@
         }
 
         .container { max-width: 500px; margin: auto; }
-
         header { text-align: center; margin-bottom: 25px; }
         h2 { margin-bottom: 5px; color: var(--text); }
         .subtitle { font-size: 14px; color: #7f8c8d; }
 
-        /* Card Cari */
         .search-card {
             background: var(--white);
             padding: 20px;
@@ -49,7 +47,6 @@
 
         input:focus { border-color: var(--primary); }
 
-        /* Grid Kartu Bulanan */
         .grid-bulan {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -61,29 +58,17 @@
             padding: 15px;
             border-radius: 12px;
             text-align: center;
-            border-bottom: 4px solid #ddd;
+            border-bottom: 4px solid var(--primary);
             transition: 0.3s;
-        }
-
-        /* Status Belum Bayar */
-        .card-bulan.status-tagihan {
-            border-bottom-color: var(--danger);
-        }
-        .status-tagihan .status-label { color: var(--danger); font-weight: bold; }
-
-        /* Status Lunas */
-        .card-bulan.status-lunas {
-            border-bottom-color: var(--primary);
             background: #f0fff4;
         }
-        .status-lunas .status-label { color: var(--primary); font-weight: bold; }
 
         .nama-bulan { display: block; font-size: 16px; font-weight: 700; margin-bottom: 5px; }
-        .status-label { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        .status-label { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--primary); font-weight: bold; }
         .nominal { display: block; font-size: 13px; color: #95a5a6; margin-top: 5px; }
 
-        .hasil-cari { margin-top: 10px; }
         .info-warga { padding: 10px; font-weight: bold; display: none; }
+        .loading-text { text-align: center; font-style: italic; color: #7f8c8d; display: none; }
     </style>
 </head>
 <body>
@@ -99,6 +84,7 @@
         <input type="text" id="inputNama" placeholder="Contoh: Pak Budi" onkeyup="cariTagihan()">
     </div>
 
+    <div id="loading" class="loading-text">Mencari data di server...</div>
     <div id="infoWarga" class="info-warga">Menampilkan iuran untuk: <span id="namaTerpilih" style="color: var(--primary);"></span></div>
 
     <div class="grid-bulan" id="containerBulan">
@@ -106,95 +92,49 @@
 </div>
 
 <script>
-    // Data Contoh (Nanti bisa dihubungkan ke database/Google Sheets)
-const dataIuran = [
-    { nama: "Budi Santoso", bulan: "Januari", status: "lunas", nominal: "20.000" },
-    { nama: "Budi Santoso", bulan: "Februari", status: "tagihan", nominal: "20.000" },
-    { nama: "Ahmad Fauzi", bulan: "Januari", status: "lunas", nominal: "20.000" },
-    // Tambahkan baris baru di sini untuk warga lain...
-];
+    // MASUKKAN LINK CSV GOOGLE SHEETS KAMU DI SINI
+    const urlCSV = 'URL_PUBLISH_TO_WEB_CSV_KAMU';
 
-    function cariTagihan() {
-        const input = document.getElementById('inputNama').value;
+    async function cariTagihan() {
+        const input = document.getElementById('inputNama').value.toLowerCase();
         const container = document.getElementById('containerBulan');
         const info = document.getElementById('infoWarga');
         const namaSpan = document.getElementById('namaTerpilih');
+        const loading = document.getElementById('loading');
 
+        // Reset tampilan jika input kurang dari 3 huruf
         if (input.length < 3) {
             container.innerHTML = "";
             info.style.display = "none";
             return;
         }
 
-        info.style.display = "block";
-        namaSpan.innerText = input;
-        container.innerHTML = "";
+        loading.style.display = "block";
 
-        dataIuran.forEach(item => {
-            const card = document.createElement('div');
-            card.className = `card-bulan status-${item.status}`;
+        try {
+            const response = await fetch(urlCSV);
+            const dataText = await response.text();
             
-            const labelStatus = item.status === "lunas" ? "✓ LUNAS" : "✘ BELUM BAYAR";
+            // Mengubah CSV menjadi array (baris demi baris)
+            const rows = dataText.split('\n');
+            const dataIuran = [];
 
-            card.innerHTML = `
-                <span class="nama-bulan">${item.bulan}</span>
-                <span class="status-label">${labelStatus}</span>
-                <span class="nominal">Rp ${item.nominal}</span>
-            `;
-            container.appendChild(card);
-        });
-    }
-</script>
+            // Memproses baris (mulai dari index 1 karena index 0 adalah header)
+            for (let i = 1; i < rows.length; i++) {
+                const cols = rows[i].split(',');
+                if (cols.length >= 3) {
+                    dataIuran.push({
+                        nama: cols[0].trim(),
+                        bulan: cols[1].trim(),
+                        nominal: cols[2].trim()
+                    });
+                }
+            }
 
-</body>
-</html>
+            // Filter data berdasarkan input nama
+            const hasilFilter = dataIuran.filter(item => item.nama.toLowerCase().includes(input));
 
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Iuran - Scan Mode</title>
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <style>
-        :root { --primary: #27ae60; --bg: #f4f7f6; --dark: #2c3e50; }
-        body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 15px; }
-        .container { max-width: 500px; margin: auto; }
-        .card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        
-        /* Area Scanner */
-        #reader {
-            width: 100%;
-            border-radius: 10px;
-            overflow: hidden;
-            border: none !important;
-            margin-bottom: 15px;
-        }
-        
-        label { display: block; font-weight: bold; margin-top: 15px; font-size: 13px; color: var(--dark); }
-        input, select { 
-            width: 100%; padding: 12px; margin-top: 5px; 
-            border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; 
-            background: #f9f9f9; font-size: 16px;
-        }
-
-        .btn-scan {
-            background: #3498db; color: white; border: none; padding: 10px;
-            border-radius: 8px; width: 100%; font-weight: bold; margin-bottom: 10px;
-            cursor: pointer;
-        }
-
-        .btn-save { 
-            width: 100%; padding: 15px; background: var(--primary); 
-            color: white; border: none; border-radius: 8px; 
-            font-weight: bold; margin-top: 20px; cursor: pointer; font-size: 16px;
-        }
-        
-        .success-flash {
-            background: #d4f8e2; color: #27ae60; padding: 10px;
-            border-radius: 8px; text-align: center; margin-bottom: 10px;
-            display: none; font-weight: bold;
-        }
-    </style>
-</head>
-<body>
+            loading.style.display = "none";
+            info.style.display = "block";
+            namaSpan.innerText = input.toUpperCase();
+            container.innerHTML =
