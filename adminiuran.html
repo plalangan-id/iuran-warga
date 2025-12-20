@@ -70,11 +70,36 @@
         });
     }
 
-    function simpanData() {
-        const nama = document.getElementById('adminNama').value;
-        if(!nama) return alert("Scan barcode warga dulu!");
-        alert("Data " + nama + " berhasil disimpan!");
+function simpanData() {
+    const nama = document.getElementById('adminNama').value;
+    const bulan = document.getElementById('adminBulan').value;
+    const jumlah = document.getElementById('adminJumlah').value;
+    
+    // GANTI link ini dengan Web App URL yang kamu dapat dari Deploy Apps Script
+    const scriptURL = 'URL_WEB_APP_KAMU_DI_SINI'; 
+
+    if(!nama) return alert("Scan barcode warga dulu!");
+
+    const btn = document.querySelector('.btn-save');
+    btn.innerText = "SEDANG MENGIRIM...";
+    btn.disabled = true;
+
+    fetch(scriptURL, {
+        method: 'POST',
+        mode: 'no-cors', // Penting untuk menghindari error CORS di browser
+        body: JSON.stringify({ nama: nama, bulan: bulan, jumlah: jumlah })
+    })
+    .then(() => {
+        alert("BERHASIL! Data " + nama + " sudah masuk ke Google Sheets.");
         document.getElementById('adminNama').value = "";
+        btn.innerText = "SIMPAN PEMBAYARAN";
+        btn.disabled = false;
+    })
+    .catch(error => {
+        alert("Gagal kirim data. Cek koneksi.");
+        btn.disabled = false;
+    });
+}
     }
 </script>
 </body>
