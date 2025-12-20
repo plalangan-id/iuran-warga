@@ -23,7 +23,7 @@
         body.dark-mode .lunas { background: #0a2e17; }
         .belum { border-color: var(--danger); background: #fdf2f2; color: var(--danger); }
         body.dark-mode .belum { background: #3a1111; }
-        .tgl { font-size: 10px; display: block; margin-top: 5px; font-style: italic; opacity: 0.8; }
+        .tgl { font-size: 9px; display: block; margin-top: 5px; font-style: italic; opacity: 0.8; line-height: 1.2; }
         .kas-info { background: var(--card-bg); padding: 20px; border-radius: 15px; margin-top: 25px; text-align: center; border: 1px solid #ddd; }
         .kas-info h2 { margin: 5px 0; color: var(--primary); font-size: 28px; }
     </style>
@@ -41,7 +41,7 @@
     </div>
 
     <div class="search-area">
-        <input type="text" id="inNama" placeholder="Ketik Nama Warga..." onkeyup="cariData()">
+        <input type="text" id="inNama" placeholder="Ketik Nama (jija / topek)..." onkeyup="cariData()">
     </div>
 
     <div id="resHead" class="result-head">
@@ -76,17 +76,17 @@
             const rawData = await resp.text();
             window.db = parseCSV(rawData);
 
-            // Kolom F (Index 5) Baris 2 untuk Pengumuman
-            if (window.db[1] && window.db[1][5]) {
+            // Pengumuman di Kolom E (Index 4) Baris 2
+            if (window.db[1] && window.db[1][4]) {
                 document.getElementById('pBox').style.display = 'block';
-                document.getElementById('pIsi').innerText = window.db[1][5];
+                document.getElementById('pIsi').innerText = window.db[1][4];
             }
 
-            // Kolom E (Index 4) untuk Nominal - Menjumlahkan semua baris yang ada angkanya
+            // Total Kas di Kolom D (Index 3)
             let total = 0;
             for(let i=1; i < window.db.length; i++) {
-                if(window.db[i][4]) {
-                    let nom = parseInt(window.db[i][4].replace(/[^0-9]/g, '')) || 0;
+                if(window.db[i][3]) {
+                    let nom = parseInt(window.db[i][3].replace(/[^0-9]/g, '')) || 0;
                     total += nom;
                 }
             }
@@ -105,14 +105,13 @@
         let matches = [];
         let displayNama = "";
 
-        // LOGIKA BARU: Menyisir seluruh database untuk mencari SEMUA baris milik satu nama
         window.db.forEach((row, idx) => {
             if (idx === 0) return;
-            // Kolom C (Index 2) = Nama
-            if (row[2] && row[2].toLowerCase().includes(query)) {
-                // Simpan setiap bulan yang ditemukan untuk nama tersebut
-                matches.push({ bulan: row[3], tanggal: row[1] });
-                displayNama = row[2].toUpperCase(); 
+            // Kolom B (Index 1) = NAMA
+            if (row[1] && row[1].toLowerCase().includes(query)) {
+                // Kolom C (Index 2) = BULAN, Kolom A (Index 0) = TANGGAL
+                matches.push({ bulan: row[2], tanggal: row[0] });
+                displayNama = row[1].toUpperCase(); 
             }
         });
 
@@ -123,8 +122,7 @@
             grid.innerHTML = "";
             
             bulanArr.forEach(b => {
-                // Cari di dalam daftar 'matches' apakah bulan ini sudah dibayar
-                const bayar = matches.find(m => m.bulan.toLowerCase() === b.toLowerCase());
+                const bayar = matches.find(m => m.bulan && m.bulan.toLowerCase() === b.toLowerCase());
                 const div = document.createElement('div');
                 div.className = `card ${bayar ? 'lunas' : 'belum'}`;
                 div.innerHTML = `
@@ -136,7 +134,7 @@
                 grid.appendChild(div);
             });
         } else {
-            grid.innerHTML = "<p style='grid-column: span 2; text-align: center;'>Nama tidak ditemukan</p>";
+            grid.innerHTML = "<p style='grid-column: span 2; text-align: center; color: var(--danger);'>Nama tidak ditemukan</p>";
             head.style.display = "none";
         }
     }
