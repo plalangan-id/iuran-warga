@@ -128,7 +128,12 @@
                 let nominalKeluar = parseInt(window.db[1][6].replace(/[^0-9]/g, '')) || 0;
                 let sisa = total - nominalKeluar;
 
-                document.getElementById('listKeluar').innerText = rincian;
+                // Menampilkan teks rincian DAN nominal pengeluaran di bawahnya
+                document.getElementById('listKeluar').innerHTML = `
+                    ${rincian} <br> 
+                    <strong style="color:var(--danger)">- Rp ${nominalKeluar.toLocaleString('id-ID')}</strong>
+                `;
+                
                 document.getElementById('sisaKas').innerText = "Rp " + sisa.toLocaleString('id-ID');
             }
 
