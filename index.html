@@ -6,123 +6,142 @@
     <title>Portal Iuran Plalangan</title>
     <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/1160/1160329.png">
     <style>
-        :root { --primary: #27ae60; --danger: #e74c3c; --bg: #f4f7f6; --card-bg: #ffffff; --text-main: #2c3e50; }
-        body.dark-mode { --bg: #121212; --card-bg: #1e1e1e; --text-main: #e0e0e0; }
-        body { background-color: var(--bg); font-family: sans-serif; margin: 0; padding: 15px; color: var(--text-main); transition: 0.3s; }
+        :root { --primary: #27ae60; --danger: #e74c3c; --bg: #f4f7f6; --card-bg: #ffffff; --text: #2c3e50; }
+        body.dark-mode { --bg: #121212; --card-bg: #1e1e1e; --text: #e0e0e0; }
+        body { background-color: var(--bg); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 15px; color: var(--text); transition: 0.3s; }
         .container { max-width: 500px; margin: auto; }
-        .header-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .btn-mode { background: var(--card-bg); border: 1px solid #ccc; padding: 7px 12px; border-radius: 20px; cursor: pointer; color: var(--text-main); font-size: 11px; }
-        .box-info { background: #fff9c4; color: #333; padding: 12px; border-radius: 10px; margin-bottom: 15px; border-left: 5px solid #fbc02d; font-size: 13px; display: none; }
-        body.dark-mode .box-info { background: #332b00; color: #fff; }
-        .search-box { background: var(--card-bg); padding: 15px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; text-align: center; background: var(--card-bg); color: var(--text-main); box-sizing: border-box; }
-        .warga-nama { text-align: center; margin-bottom: 15px; display: none; padding: 10px; background: var(--card-bg); border-radius: 10px; border-bottom: 4px solid var(--primary); }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .item-bulan { background: var(--card-bg); padding: 12px; border-radius: 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 2px solid transparent; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .btn-mode { background: var(--card-bg); border: 1px solid #ccc; padding: 8px 15px; border-radius: 20px; cursor: pointer; color: var(--text); font-size: 12px; }
+        .info-box { background: #fff9c4; color: #333; padding: 15px; border-radius: 12px; margin-bottom: 20px; border-left: 5px solid #fbc02d; display: none; font-size: 14px; }
+        body.dark-mode .info-box { background: #332b00; color: #fff9c4; }
+        .search-area { background: var(--card-bg); padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        input { width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 10px; font-size: 18px; text-align: center; background: var(--card-bg); color: var(--text); box-sizing: border-box; outline: none; }
+        .result-head { text-align: center; margin-bottom: 15px; display: none; padding: 15px; background: var(--card-bg); border-radius: 12px; border-bottom: 4px solid var(--primary); }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .card { background: var(--card-bg); padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 2px solid transparent; }
         .lunas { border-color: var(--primary); background: #ebfaef; color: var(--primary); }
         body.dark-mode .lunas { background: #0a2e17; }
         .belum { border-color: var(--danger); background: #fdf2f2; color: var(--danger); }
         body.dark-mode .belum { background: #3a1111; }
-        .tgl { font-size: 9px; display: block; margin-top: 4px; opacity: 0.8; }
-        .kas { background: var(--card-bg); padding: 15px; border-radius: 15px; margin-top: 20px; text-align: center; border: 1px solid #ddd; }
-        .kas h2 { margin: 5px 0; color: var(--primary); }
+        .tgl { font-size: 10px; display: block; margin-top: 5px; font-style: italic; opacity: 0.8; }
+        .kas-info { background: var(--card-bg); padding: 20px; border-radius: 15px; margin-top: 25px; text-align: center; border: 1px solid #ddd; }
+        .kas-info h2 { margin: 5px 0; color: var(--primary); font-size: 28px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="header-nav">
+    <div class="header">
         <strong>🏡 Plalangan Digital</strong>
-        <button class="btn-mode" onclick="modeGanti()" id="btnM">🌙 Mode Gelap</button>
+        <button class="btn-mode" onclick="gantiMode()" id="txtM">🌙 Mode Gelap</button>
     </div>
 
-    <div id="pBox" class="box-info">
-        <strong>📢 INFO:</strong> <span id="pText"></span>
+    <div id="pBox" class="info-box">
+        <strong>📢 PENGUMUMAN:</strong> <br><span id="pIsi"></span>
     </div>
 
-    <div class="search-box">
-        <input type="text" id="inNama" placeholder="Ketik Nama Anda..." onkeyup="prosesCari()">
+    <div class="search-area">
+        <input type="text" id="inNama" placeholder="Ketik Nama Warga..." onkeyup="cariData()">
     </div>
 
-    <div id="wBox" class="warga-nama">
-        <h3 id="wNama" style="margin:0;"></h3>
+    <div id="resHead" class="result-head">
+        <small>DATA PEMBAYARAN:</small>
+        <h3 id="resNama" style="margin:5px 0 0 0"></h3>
     </div>
 
-    <div class="grid" id="gBulan"></div>
+    <div id="gridBulan" class="grid"></div>
 
-    <div class="kas">
-        <small>Total Kas (2026)</small>
-        <h2 id="tKas">Rp 0</h2>
+    <div class="kas-info">
+        <small>Total Kas Terkumpul (2026)</small>
+        <h2 id="totalKas">Rp 0</h2>
     </div>
 </div>
 
 <script>
-    const linkCSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSqOacaVgTEVIQdIOgsacKIqQtqfTqUH5F_UMoI5R6ci5fxg2Px6BHrdlfntfdR7Md7Z3TshmUHtG7V/pub?gid=0&single=true&output=csv';
+    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSqOacaVgTEVIQdIOgsacKIqQtqfTqUH5F_UMoI5R6ci5fxg2Px6BHrdlfntfdR7Md7Z3TshmUHtG7V/pub?gid=0&single=true&output=csv';
 
-    function modeGanti() {
+    function gantiMode() {
         document.body.classList.toggle('dark-mode');
-        document.getElementById('btnM').innerText = document.body.classList.contains('dark-mode') ? "☀️ Mode Terang" : "🌙 Mode Gelap";
+        document.getElementById('txtM').innerText = document.body.classList.contains('dark-mode') ? "☀️ Mode Terang" : "🌙 Mode Gelap";
     }
 
-    async function ambilData() {
+    function parseCSV(text) {
+        const regex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/;
+        return text.split(/\r?\n/).map(line => line.split(regex).map(cell => cell.replace(/^"|"$/g, '').trim()));
+    }
+
+    async function init() {
         try {
-            const r = await fetch(linkCSV + '&v=' + new Date().getTime());
-            const s = await r.text();
-            const baris = s.split(/\r?\n/);
-            window.semuaBaris = baris;
+            const resp = await fetch(csvUrl + '&v=' + new Date().getTime());
+            const rawData = await resp.text();
+            window.db = parseCSV(rawData);
 
-            // F = Index 5 (Pengumuman)
-            const k = baris[1].split(",");
-            if(k[5]) {
-                document.getElementById('pBox').style.display = "block";
-                document.getElementById('pText').innerText = k[5].replace(/"/g, '');
+            // Kolom F (Index 5) Baris 2 untuk Pengumuman
+            if (window.db[1] && window.db[1][5]) {
+                document.getElementById('pBox').style.display = 'block';
+                document.getElementById('pIsi').innerText = window.db[1][5];
             }
 
-            // E = Index 4 (Nominal)
+            // Kolom E (Index 4) untuk Nominal - Menjumlahkan semua baris yang ada angkanya
             let total = 0;
-            for(let i=1; i<baris.length; i++) {
-                const c = baris[i].split(",");
-                if(c[4]) total += parseInt(c[4].replace(/[^0-9]/g, '')) || 0;
+            for(let i=1; i < window.db.length; i++) {
+                if(window.db[i][4]) {
+                    let nom = parseInt(window.db[i][4].replace(/[^0-9]/g, '')) || 0;
+                    total += nom;
+                }
             }
-            document.getElementById('tKas').innerText = "Rp " + total.toLocaleString('id-ID');
-        } catch (e) { console.log("Gagal"); }
+            document.getElementById('totalKas').innerText = "Rp " + total.toLocaleString('id-ID');
+
+        } catch (err) { console.error("Gagal ambil data"); }
     }
 
-    function prosesCari() {
-        const cari = document.getElementById('inNama').value.toLowerCase().trim();
-        const g = document.getElementById('gBulan');
-        const w = document.getElementById('wBox');
+    function cariData() {
+        const query = document.getElementById('inNama').value.toLowerCase().trim();
+        const grid = document.getElementById('gridBulan');
+        const head = document.getElementById('resHead');
 
-        if(cari.length < 3) { g.innerHTML = ""; w.style.display = "none"; return; }
+        if (query.length < 3) { grid.innerHTML = ""; head.style.display = "none"; return; }
 
-        let hasil = [];
-        let namaKetemu = "";
+        let matches = [];
+        let displayNama = "";
 
-        window.semuaBaris.forEach((brs, i) => {
-            if(i === 0) return;
-            const c = brs.split(",").map(v => v.replace(/"/g, '').trim());
-            // C = Index 2 (Nama) | D = Index 3 (Bulan) | B = Index 1 (Tanggal)
-            if(c[2] && c[2].toLowerCase().includes(cari)) {
-                hasil.push({ bln: c[3], tgl: c[1] });
-                namaKetemu = c[2].toUpperCase();
+        // LOGIKA BARU: Menyisir seluruh database untuk mencari SEMUA baris milik satu nama
+        window.db.forEach((row, idx) => {
+            if (idx === 0) return;
+            // Kolom C (Index 2) = Nama
+            if (row[2] && row[2].toLowerCase().includes(query)) {
+                // Simpan setiap bulan yang ditemukan untuk nama tersebut
+                matches.push({ bulan: row[3], tanggal: row[1] });
+                displayNama = row[2].toUpperCase(); 
             }
         });
 
-        if(hasil.length > 0) {
-            w.style.display = "block";
-            document.getElementById('wNama').innerText = namaKetemu;
-            const listBln = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-            g.innerHTML = "";
-            listBln.forEach(b => {
-                const d = hasil.find(h => h.bln === b);
+        if (matches.length > 0) {
+            head.style.display = "block";
+            document.getElementById('resNama').innerText = displayNama;
+            const bulanArr = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            grid.innerHTML = "";
+            
+            bulanArr.forEach(b => {
+                // Cari di dalam daftar 'matches' apakah bulan ini sudah dibayar
+                const bayar = matches.find(m => m.bulan.toLowerCase() === b.toLowerCase());
                 const div = document.createElement('div');
-                div.className = `item-bulan ${d ? 'lunas' : 'belum'}`;
-                div.innerHTML = `<strong>${b}</strong><br><span style="font-size:20px">${d ? '✅' : '❌'}</span><br><small>${d ? 'LUNAS' : 'BELUM'}</small>${d ? `<span class="tgl">${d.tgl}</span>` : ''}`;
-                g.appendChild(div);
+                div.className = `card ${bayar ? 'lunas' : 'belum'}`;
+                div.innerHTML = `
+                    <div style="font-size:13px; font-weight:bold">${b}</div>
+                    <div style="font-size:24px; margin:5px 0">${bayar ? '✅' : '❌'}</div>
+                    <div style="font-size:11px; font-weight:bold">${bayar ? 'LUNAS' : 'BELUM'}</div>
+                    ${bayar ? `<span class="tgl">${bayar.tanggal}</span>` : ''}
+                `;
+                grid.appendChild(div);
             });
+        } else {
+            grid.innerHTML = "<p style='grid-column: span 2; text-align: center;'>Nama tidak ditemukan</p>";
+            head.style.display = "none";
         }
     }
-    ambilData();
+
+    init();
 </script>
 </body>
 </html>
