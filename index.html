@@ -107,14 +107,12 @@
 
 <script>
     // Data Contoh (Nanti bisa dihubungkan ke database/Google Sheets)
-    const dataIuran = [
-        { bulan: "Januari", status: "lunas", nominal: "15.000" },
-        { bulan: "Februari", status: "lunas", nominal: "15.000" },
-        { bulan: "Maret", status: "tagihan", nominal: "15.000" },
-        { bulan: "April", status: "tagihan", nominal: "15.000" },
-        { bulan: "Mei", status: "tagihan", nominal: "15.000" },
-        { bulan: "Juni", status: "tagihan", nominal: "15.000" }
-    ];
+const dataIuran = [
+    { nama: "Budi Santoso", bulan: "Januari", status: "lunas", nominal: "20.000" },
+    { nama: "Budi Santoso", bulan: "Februari", status: "tagihan", nominal: "20.000" },
+    { nama: "Ahmad Fauzi", bulan: "Januari", status: "lunas", nominal: "20.000" },
+    // Tambahkan baris baru di sini untuk warga lain...
+];
 
     function cariTagihan() {
         const input = document.getElementById('inputNama').value;
