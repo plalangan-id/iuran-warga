@@ -3,45 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cek Iuran Warga</title>
+    <title>Kalender Iuran Warga</title>
     <style>
-        :root { --primary: #2ecc71; --danger: #e74c3c; --bg: #f4f7f6; --text: #2c3e50; }
-        body { background-color: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 15px; }
+        :root { --primary: #27ae60; --danger: #e74c3c; --bg: #f8f9fa; }
+        body { background-color: var(--bg); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 15px; }
         .container { max-width: 500px; margin: auto; }
         header { text-align: center; margin-bottom: 20px; }
-        .search-card { background: #fff; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        input { width: 100%; padding: 15px; border: 2px solid #eee; border-radius: 12px; font-size: 16px; box-sizing: border-box; outline: none; text-align: center; }
+        
+        .search-card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box; outline: none; text-align: center; }
         input:focus { border-color: var(--primary); }
-        .grid-bulan { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+        /* Bagian yang saya ubah agar lebih relevan */
+        .info-warga { text-align: center; margin-bottom: 15px; display: none; padding: 15px; background: white; border-radius: 8px; border-left: 5px solid var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .info-warga p { margin: 0; font-size: 12px; color: #7f8c8d; text-transform: uppercase; letter-spacing: 1px; }
+        .info-warga h3 { margin: 5px 0 0 0; color: #333; font-size: 20px; font-weight: 800; }
+
+        .grid-kalender { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 10px; 
+        }
+
+        .box-bulan {
+            background: white;
+            padding: 15px 5px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border: 1px solid #eee;
+        }
+
+        .bulan-nama { font-size: 11px; font-weight: bold; color: #7f8c8d; text-transform: uppercase; }
+        .status-ikon { font-size: 20px; margin: 5px 0; }
         
-        /* Style untuk LUNAS */
-        .card-lunas { background: #f0fff4; padding: 15px; border-radius: 12px; text-align: center; border-bottom: 4px solid var(--primary); }
-        .card-lunas .status-label { color: var(--primary); font-weight: bold; font-size: 12px; }
-        
-        /* Style untuk BELUM BAYAR */
-        .card-belum { background: #fff5f5; padding: 15px; border-radius: 12px; text-align: center; border-bottom: 4px solid var(--danger); opacity: 0.8; }
-        .card-belum .status-label { color: var(--danger); font-weight: bold; font-size: 12px; }
-        
-        .nama-bulan { display: block; font-size: 16px; font-weight: 700; }
-        .info-warga { padding: 10px; font-weight: bold; display: none; background: #e8f8f5; border-radius: 8px; margin-bottom: 15px; text-align: center; }
-        .loading-text { text-align: center; font-style: italic; color: #7f8c8d; display: none; }
+        .lunas { border-top: 4px solid var(--primary); background: #f0fff4; }
+        .lunas .status-ikon { color: var(--primary); }
+        .lunas .bulan-nama { color: #27ae60; }
+
+        .belum { border-top: 4px solid #bdc3c7; background: #fff; }
+        .belum .status-ikon { color: #bdc3c7; }
+
+        .status-teks { font-size: 9px; font-weight: bold; }
+        .loading { text-align: center; display: none; color: #7f8c8d; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <header>
-        <h2>IURAN KAMPUNG</h2>
-        <p>Cek status pembayaran iuran 2026</p>
+        <h2 style="margin-bottom:5px;">STATUS IURAN 2026</h2>
+        <p style="margin-top:0; color:#666; font-size: 14px;">RW 05 - PLALANGAN</p>
     </header>
 
     <div class="search-card">
-        <input type="text" id="inputNama" placeholder="Ketik Nama Anda..." onkeyup="cariTagihan()">
+        <input type="text" id="inputNama" placeholder="Cari Nama Anda..." onkeyup="cariTagihan()">
     </div>
 
-    <div id="loading" class="loading-text">Mencari data...</div>
-    <div id="infoWarga" class="info-warga">Warga: <span id="namaTerpilih"></span></div>
-    <div class="grid-bulan" id="containerBulan"></div>
+    <div id="loading" class="loading">Mengecek database...</div>
+
+    <div id="infoWarga" class="info-warga">
+        <p>Nama Pembayar:</p>
+        <h3 id="namaTerpilih"></h3>
+    </div>
+
+    <div class="grid-kalender" id="containerBulan"></div>
 </div>
 
 <script>
@@ -67,58 +96,44 @@
             const rows = dataText.split(/\r?\n/);
             
             container.innerHTML = "";
-            let dataDitemukan = [];
-            let namaWargaAsli = "";
+            let dataWarga = [];
+            let namaAsli = "";
 
-            // 1. Kumpulkan semua data yang cocok dengan nama
-            for (let i = 1; i < rows.length; i++) {
-                if (!rows[i]) continue;
-                const cols = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/"/g, '').trim());
-                
-                const namaDiSheet = cols[1] ? cols[1].toLowerCase() : "";
-                if (namaDiSheet.includes(input)) {
-                    dataDitemukan.push(cols);
-                    namaWargaAsli = cols[1].toUpperCase(); // Ambil nama asli dari sheet
+            rows.forEach((row, index) => {
+                if(index === 0) return;
+                const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/"/g, '').trim());
+                if(cols[1] && cols[1].toLowerCase().includes(input)) {
+                    dataWarga.push(cols[2]); 
+                    namaAsli = cols[1].toUpperCase();
                 }
-            }
+            });
 
-            if (dataDitemukan.length > 0) {
+            if (dataWarga.length > 0) {
                 loading.style.display = "none";
                 info.style.display = "block";
-                document.getElementById('namaTerpilih').innerText = namaWargaAsli;
+                document.getElementById('namaTerpilih').innerText = namaAsli;
 
-                // 2. Daftar bulan standar
-                const semuaBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+                const bulanList = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
                 
-                // 3. Cek per bulan
-                semuaBulan.forEach(bulan => {
-                    // Cari apakah bulan ini ada di data iuran warga tersebut
-                    const bayar = dataDitemukan.find(d => d[2] === bulan);
+                bulanList.forEach(bulan => {
+                    const isLunas = dataWarga.includes(bulan);
                     const card = document.createElement('div');
-
-                    if (bayar) {
-                        card.className = 'card-lunas';
-                        card.innerHTML = `
-                            <span class="nama-bulan">${bulan}</span>
-                            <span class="status-label">✓ LUNAS</span>
-                            <br><small>Rp ${bayar[3] || '15.000'}</small>
-                        `;
-                    } else {
-                        card.className = 'card-belum';
-                        card.innerHTML = `
-                            <span class="nama-bulan">${bulan}</span>
-                            <span class="status-label">❌ BELUM BAYAR</span>
-                        `;
-                    }
+                    card.className = `box-bulan ${isLunas ? 'lunas' : 'belum'}`;
+                    
+                    card.innerHTML = `
+                        <span class="bulan-nama">${bulan.substring(0, 3)}</span>
+                        <span class="status-ikon">${isLunas ? '✅' : '⚪'}</span>
+                        <span class="status-teks" style="color: ${isLunas ? '#27ae60' : '#bdc3c7'}">
+                            ${isLunas ? 'LUNAS' : 'BELUM'}
+                        </span>
+                    `;
                     container.appendChild(card);
                 });
-
             } else {
                 loading.style.display = "none";
                 info.style.display = "none";
-                container.innerHTML = "<p style='grid-column: span 2; text-align: center;'>Nama tidak ditemukan.</p>";
+                container.innerHTML = "<p style='grid-column: span 3; text-align: center; color: #999; font-size: 14px; margin-top: 20px;'>Nama tidak ditemukan dalam database.</p>";
             }
-
         } catch (e) {
             loading.innerText = "Gagal memuat data.";
         }
