@@ -4,97 +4,56 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal Digital Plalangan</title>
-    
     <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/1160/1160329.png">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1160/1160329.png">
     
     <style>
-        :root { 
-            --primary: #27ae60; --danger: #e74c3c; 
-            --bg: #f4f7f6; --card-bg: #ffffff; 
-            --text-main: #2c3e50; --text-sub: #7f8c8d;
-            --border: #dddddd;
-        }
-
-        body.dark-mode { 
-            --bg: #121212; --card-bg: #1e1e1e; 
-            --text-main: #e0e0e0; --text-sub: #b0b0b0;
-            --border: #333333;
-        }
-
-        body { background-color: var(--bg); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 15px; color: var(--text-main); transition: 0.3s; }
-        .container { max-width: 600px; margin: auto; }
-        
+        :root { --primary: #27ae60; --danger: #e74c3c; --bg: #f4f7f6; --card-bg: #ffffff; --text-main: #2c3e50; --border: #dddddd; }
+        body.dark-mode { --bg: #121212; --card-bg: #1e1e1e; --text-main: #e0e0e0; --border: #333333; }
+        body { background-color: var(--bg); font-family: sans-serif; margin: 0; padding: 15px; color: var(--text-main); transition: 0.3s; }
+        .container { max-width: 500px; margin: auto; }
         .header-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .dark-mode-toggle { background: var(--card-bg); border: 1px solid var(--border); padding: 8px 12px; border-radius: 20px; cursor: pointer; color: var(--text-main); font-size: 12px; font-weight: bold; }
-
-        header { text-align: center; margin-bottom: 20px; }
-        header h2 { margin: 0; font-size: 24px; text-transform: uppercase; letter-spacing: 1px; }
-        header p { margin: 5px 0; color: var(--primary); font-weight: bold; }
-
-        .announcement-box { background: #fff9c4; color: #333; padding: 15px; border-radius: 12px; margin-bottom: 20px; border-left: 5px solid #fbc02d; font-size: 14px; display: none; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .dark-mode-toggle { background: var(--card-bg); border: 1px solid var(--border); padding: 8px 12px; border-radius: 20px; cursor: pointer; color: var(--text-main); font-size: 12px; }
+        .announcement-box { background: #fff9c4; color: #333; padding: 15px; border-radius: 12px; margin-bottom: 20px; border-left: 5px solid #fbc02d; font-size: 14px; display: none; }
         body.dark-mode .announcement-box { background: #332b00; color: #fff9c4; }
-
-        .search-card { background: var(--card-bg); padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        input { width: 100%; padding: 15px; border: 2px solid var(--border); border-radius: 10px; font-size: 18px; box-sizing: border-box; text-align: center; font-weight: bold; background: var(--card-bg); color: var(--text-main); outline: none; }
-        input:focus { border-color: var(--primary); }
-
-        .info-warga { text-align: center; margin-bottom: 20px; display: none; padding: 20px; background: var(--card-bg); border-radius: 12px; border-bottom: 5px solid var(--primary); }
-        
-        .grid-kalender { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-        .box-bulan { background: var(--card-bg); padding: 15px; border-radius: 12px; text-align: center; border: 2px solid transparent; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        
+        .search-card { background: var(--card-bg); padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        input { width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: 10px; font-size: 16px; text-align: center; background: var(--card-bg); color: var(--text-main); outline: none; }
+        .info-warga { text-align: center; margin-bottom: 15px; display: none; padding: 15px; background: var(--card-bg); border-radius: 12px; border-bottom: 4px solid var(--primary); }
+        .grid-kalender { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .box-bulan { background: var(--card-bg); padding: 12px; border-radius: 10px; text-align: center; border: 2px solid transparent; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .lunas { background: #ebfaef; border-color: var(--primary); color: var(--primary); }
         body.dark-mode .lunas { background: #0a2e17; }
-        
         .belum { background: #fdf2f2; border-color: var(--danger); color: var(--danger); }
         body.dark-mode .belum { background: #3a1111; }
-
-        .tgl-bayar { font-size: 9px; display: block; margin-top: 5px; opacity: 0.8; font-style: italic; }
-
-        .kas-box { background: var(--card-bg); padding: 20px; border-radius: 15px; margin-top: 30px; text-align: center; border: 1px solid var(--border); }
-        .kas-box h4 { margin: 0; color: var(--text-sub); font-size: 11px; text-transform: uppercase; }
-        .kas-box h2 { margin: 10px 0 0 0; color: var(--primary); font-size: 26px; }
-
-        .footer { text-align: center; font-size: 11px; color: var(--text-sub); margin-top: 30px; padding-bottom: 20px; line-height: 1.6; }
+        .tgl-bayar { font-size: 10px; display: block; margin-top: 5px; opacity: 0.8; }
+        .kas-box { background: var(--card-bg); padding: 15px; border-radius: 15px; margin-top: 20px; text-align: center; border: 1px solid var(--border); }
+        .kas-box h2 { margin: 5px 0; color: var(--primary); }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header-nav">
-        <div style="font-weight: bold; font-size: 14px;">🏡 Plalangan Digital</div>
+        <div style="font-weight: bold;">🏡 Plalangan Digital</div>
         <button class="dark-mode-toggle" onclick="toggleDarkMode()" id="modeBtn">🌙 Mode Gelap</button>
     </div>
 
     <div id="boxPengumuman" class="announcement-box">
-        <strong>📢 INFO:</strong> <span id="isiPengumuman">...</span>
+        <strong>📢 INFO:</strong> <span id="isiPengumuman"></span>
     </div>
 
-    <header>
-        <h2>STATUS IURAN 2026</h2>
-        <p>Dsn. Plalangan</p>
-    </header>
-
     <div class="search-card">
-        <input type="text" id="inputNama" placeholder="KETIK NAMA WARGA..." onkeyup="cariTagihan()" autocomplete="off">
+        <input type="text" id="inputNama" placeholder="Ketik Nama Warga..." onkeyup="cariTagihan()">
     </div>
 
     <div id="infoWarga" class="info-warga">
-        <p style="margin:0; font-size:11px; color:var(--text-sub);">DATA PEMBAYARAN:</p>
-        <h3 id="namaTerpilih" style="margin: 5px 0;"></h3>
+        <h3 id="namaTerpilih" style="margin:0;"></h3>
     </div>
 
     <div class="grid-kalender" id="containerBulan"></div>
 
     <div class="kas-box">
-        <h4>Estimasi Kas Terkumpul (2026)</h4>
+        <small>Total Kas Terkumpul</small>
         <h2 id="totalKas">Rp 0</h2>
-    </div>
-
-    <div class="footer">
-        &copy; 2026 Dsn. Plalangan <br>
-        Struktur Data: NO | TANGGAL | NAMA | BULAN | NOMINAL | PENGUMUMAN
     </div>
 </div>
 
@@ -103,8 +62,7 @@
 
     function toggleDarkMode() {
         document.body.classList.toggle('dark-mode');
-        const isDark = document.body.classList.contains('dark-mode');
-        document.getElementById('modeBtn').innerText = isDark ? "☀️ Mode Terang" : "🌙 Mode Gelap";
+        document.getElementById('modeBtn').innerText = document.body.classList.contains('dark-mode') ? "☀️ Mode Terang" : "🌙 Mode Gelap";
     }
 
     async function fetchData() {
@@ -114,27 +72,24 @@
             const rows = text.split(/\r?\n/);
             window.dbRows = rows;
 
-            // Baca Pengumuman dari Kolom F Baris ke-2 (Index 5)
-            const firstDataRow = rows[1].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-            const infoTxt = firstDataRow[5] ? firstDataRow[5].replace(/"/g, '') : "";
-            
-            if(infoTxt.trim() !== "") {
+            // F = Kolom 6 (Index 5) -> Pengumuman
+            const configCols = rows[1].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+            const infoTxt = configCols[5] ? configCols[5].replace(/"/g, '').trim() : "";
+            if(infoTxt) {
                 document.getElementById('boxPengumuman').style.display = "block";
                 document.getElementById('isiPengumuman').innerText = infoTxt;
             }
 
-            // Hitung Total Kas dari Kolom E (Index 4)
+            // E = Kolom 5 (Index 4) -> Nominal
             let total = 0;
             for(let i = 1; i < rows.length; i++) {
-                const cols = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                if(cols[4]) {
-                    const nilai = parseInt(cols[4].replace(/"/g, '').replace(/[^0-9]/g, '')) || 0;
-                    total += nilai;
+                const c = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                if(c[4]) {
+                    total += parseInt(c[4].replace(/"/g, '').replace(/[^0-9]/g, '')) || 0;
                 }
             }
             document.getElementById('totalKas').innerText = "Rp " + total.toLocaleString('id-ID');
-
-        } catch (e) { console.error("Gagal sinkronisasi data."); }
+        } catch (e) { console.error("Gagal muat data"); }
     }
 
     function cariTagihan() {
@@ -142,51 +97,36 @@
         const container = document.getElementById('containerBulan');
         const info = document.getElementById('infoWarga');
 
-        if (input.length < 3) {
-            container.innerHTML = "";
-            info.style.display = "none";
-            return;
-        }
+        if (input.length < 3) { container.innerHTML = ""; info.style.display = "none"; return; }
 
-        const rows = window.dbRows || [];
-        let dataBayar = []; // Berisi objek {bulan, tanggal}
-        let namaAsli = "";
+        let dataBayar = [];
+        let namaWarga = "";
 
-        rows.forEach((row, index) => {
-            if(index === 0) return;
-            const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/"/g, '').trim());
+        window.dbRows.forEach((row, i) => {
+            if(i === 0) return;
+            const c = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/"/g, '').trim());
             
-            // Kolom C = Nama (Index 2), Kolom D = Bulan (Index 3), Kolom B = Tanggal (Index 1)
-            if(cols[2] && cols[2].toLowerCase().includes(input)) {
-                dataBayar.push({ bulan: cols[3], tanggal: cols[1] }); 
-                namaAsli = cols[2].toUpperCase();
+            // C = Index 2 (Nama) | D = Index 3 (Bulan) | B = Index 1 (Tanggal)
+            if(c[2] && c[2].toLowerCase().includes(input)) {
+                dataBayar.push({ bulan: c[3], tgl: c[1] });
+                namaWarga = c[2].toUpperCase();
             }
         });
 
         if (dataBayar.length > 0) {
             info.style.display = "block";
-            document.getElementById('namaTerpilih').innerText = namaAsli;
-            
+            document.getElementById('namaTerpilih').innerText = namaWarga;
             const bulanList = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
             container.innerHTML = "";
-            
-            bulanList.forEach(bulan => {
-                const transaksi = dataBayar.find(d => d.bulan === bulan);
-                const isLunas = !!transaksi;
+            bulanList.forEach(b => {
+                const bayar = dataBayar.find(d => d.bulan === b);
                 const card = document.createElement('div');
-                card.className = `box-bulan ${isLunas ? 'lunas' : 'belum'}`;
-                
-                card.innerHTML = `
-                    <div style="font-size:12px; font-weight:800">${bulan}</div>
-                    <div style="font-size:22px; margin:5px 0">${isLunas ? '✅' : '❌'}</div>
-                    <div style="font-size:10px; font-weight:900">${isLunas ? 'LUNAS' : 'BELUM'}</div>
-                    ${isLunas ? `<span class="tgl-bayar">${transaksi.tanggal}</span>` : ''}
-                `;
+                card.className = `box-bulan ${bayar ? 'lunas' : 'belum'}`;
+                card.innerHTML = `<strong>${b}</strong><br><span style="font-size:20px">${bayar ? '✅' : '❌'}</span><br><small>${bayar ? 'LUNAS' : 'BELUM'}</small>${bayar ? `<span class="tgl-bayar">${bayar.tgl}</span>` : ''}`;
                 container.appendChild(card);
             });
         }
     }
-
     fetchData();
 </script>
 </body>
