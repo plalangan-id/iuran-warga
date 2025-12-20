@@ -67,8 +67,8 @@
         .status-label { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--primary); font-weight: bold; }
         .nominal { display: block; font-size: 13px; color: #95a5a6; margin-top: 5px; }
 
-        .info-warga { padding: 10px; font-weight: bold; display: none; }
-        .loading-text { text-align: center; font-style: italic; color: #7f8c8d; display: none; }
+        .info-warga { padding: 10px; font-weight: bold; display: none; margin-bottom: 10px; }
+        .loading-text { text-align: center; font-style: italic; color: #7f8c8d; display: none; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -81,7 +81,7 @@
 
     <div class="search-card">
         <label style="font-size: 12px; font-weight: bold; margin-bottom: 8px; display: block;">MASUKKAN NAMA WARGA:</label>
-        <input type="text" id="inputNama" placeholder="Contoh: Pak Budi" onkeyup="cariTagihan()">
+        <input type="text" id="inputNama" placeholder="Contoh: Budi" onkeyup="cariTagihan()">
     </div>
 
     <div id="loading" class="loading-text">Mencari data di server...</div>
@@ -92,8 +92,8 @@
 </div>
 
 <script>
-    // MASUKKAN LINK CSV GOOGLE SHEETS KAMU DI SINI
-    const urlCSV = 'https://script.google.com/macros/s/AKfycbxeg9jNOP4rNJnpWpsV3hQDCtVFYdayUij4_cZ9-hqB65fFM6IRgC2Qh8FFvad9-2fT/exec';
+    // Link CSV yang kamu berikan
+    const urlCSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSqOacaVgTEVIQdIOgsacKIqQtqfTqUH5F_UMoI5R6ci5fxg2Px6BHrdlfntfdR7Md7Z3TshmUHtG7V/pub?gid=0&single=true&output=csv';
 
     async function cariTagihan() {
         const input = document.getElementById('inputNama').value.toLowerCase();
@@ -102,8 +102,8 @@
         const namaSpan = document.getElementById('namaTerpilih');
         const loading = document.getElementById('loading');
 
-        // Reset tampilan jika input kurang dari 3 huruf
-        if (input.length < 3) {
+        // Reset tampilan jika input kosong atau terlalu pendek
+        if (input.length < 2) {
             container.innerHTML = "";
             info.style.display = "none";
             return;
@@ -115,18 +115,18 @@
             const response = await fetch(urlCSV);
             const dataText = await response.text();
             
-            // Mengubah CSV menjadi array (baris demi baris)
+            // Mengubah CSV menjadi array baris
             const rows = dataText.split('\n');
             const dataIuran = [];
 
-            // Memproses baris (mulai dari index 1 karena index 0 adalah header)
+            // Proses baris (mulai dari 1 untuk lewati header)
             for (let i = 1; i < rows.length; i++) {
                 const cols = rows[i].split(',');
                 if (cols.length >= 3) {
                     dataIuran.push({
-                        nama: cols[0].trim(),
-                        bulan: cols[1].trim(),
-                        nominal: cols[2].trim()
+                        nama: cols[0].replace(/"/g, '').trim(),
+                        bulan: cols[1].replace(/"/g, '').trim(),
+                        nominal: cols[2].replace(/"/g, '').trim()
                     });
                 }
             }
@@ -135,6 +135,33 @@
             const hasilFilter = dataIuran.filter(item => item.nama.toLowerCase().includes(input));
 
             loading.style.display = "none";
-            info.style.display = "block";
-            namaSpan.innerText = input.toUpperCase();
-            container.innerHTML =
+            
+            if (hasilFilter.length === 0) {
+                container.innerHTML = "<p style='grid-column: span 2; text-align: center;'>Data tidak ditemukan.</p>";
+                info.style.display = "none";
+            } else {
+                info.style.display = "block";
+                namaSpan.innerText = input.toUpperCase();
+                container.innerHTML = "";
+
+                hasilFilter.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = `card-bulan`;
+                    card.innerHTML = `
+                        <span class="nama-bulan">${item.bulan}</span>
+                        <span class="status-label">✓ LUNAS</span>
+                        <span class="nominal">Rp ${item.nominal}</span>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+
+        } catch (error) {
+            console.error("Gagal mengambil data:", error);
+            loading.innerText = "Gagal memuat data dari Sheets.";
+        }
+    }
+</script>
+
+</body>
+</html>
