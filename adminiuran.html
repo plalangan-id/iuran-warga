@@ -7,7 +7,6 @@
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         :root { --primary: #27ae60; --bg: #f4f7f6; --dark: #2c3e50; }
-        /* Body dibuat terlihat (block) tanpa syarat PIN */
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             background: var(--bg); 
@@ -19,7 +18,20 @@
         .card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
         #reader { width: 100%; border-radius: 10px; overflow: hidden; margin-bottom: 15px; background: #000; }
         label { display: block; font-weight: bold; margin-top: 15px; font-size: 13px; color: var(--dark); }
-        input, select { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; background: #fff; }
+        
+        /* Input nama dibuat normal agar keyboard muncul */
+        input, select { 
+            width: 100%; 
+            padding: 12px; 
+            margin-top: 5px; 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            box-sizing: border-box; 
+            font-size: 16px; 
+            background: #fff;
+            -webkit-appearance: none; /* Menghindari bug styling di iPhone */
+        }
+
         .btn-scan { background: #3498db; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
         .btn-save { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; margin-top: 20px; cursor: pointer; font-size: 16px; }
         .btn-save:disabled { background: #bdc3c7; cursor: not-allowed; }
@@ -35,8 +47,8 @@
         <div id="reader"></div>
         <button class="btn-scan" onclick="startScanner()">BUKA KAMERA SCANNER</button>
         
-        <label>Nama Warga (Hasil Scan)</label>
-        <input type="text" id="adminNama" placeholder="Nama akan muncul di sini..." readonly>
+        <label>Nama Warga (Bisa diketik manual)</label>
+        <input type="text" id="adminNama" placeholder="Ketik nama atau gunakan scan...">
         
         <label>Bulan Iuran</label>
         <select id="adminBulan">
@@ -61,14 +73,13 @@
     function startScanner() {
         const config = { fps: 10, qrbox: { width: 250, height: 250 } };
         
-        // Memastikan scanner dimulai dengan kamera belakang (environment)
         html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
             document.getElementById('adminNama').value = decodedText;
             html5QrCode.stop();
             alert("Scan Berhasil: " + decodedText);
         }).catch((err) => {
             console.error("Gagal buka kamera:", err);
-            alert("Error: Pastikan izin kamera sudah diberikan atau gunakan HTTPS.");
+            alert("Error: Pastikan izin kamera sudah diberikan.");
         });
     }
 
@@ -78,11 +89,11 @@
         const jumlah = document.getElementById('adminJumlah').value;
         const btn = document.getElementById('btnSimpan');
 
-        // Link Web App yang kamu berikan
+        // Menggunakan Web App URL milikmu
         const scriptURL = 'https://script.google.com/macros/s/AKfycbxeg9jNOP4rNJnpWpsV3hQDCtVFYdayUij4_cZ9-hqB65fFM6IRgC2Qh8FFvad9-2fT/exec';
 
         if(!nama) {
-            alert("Nama kosong! Silakan scan barcode warga dulu.");
+            alert("Tolong isi nama warga (ketik manual atau scan)!");
             return;
         }
 
@@ -90,10 +101,9 @@
         btn.disabled = true;
 
         try {
-            // Mengirim data ke Google Sheets
             await fetch(scriptURL, {
                 method: 'POST',
-                mode: 'no-cors', // Menghindari masalah CORS
+                mode: 'no-cors', 
                 body: JSON.stringify({ 
                     nama: nama, 
                     bulan: bulan, 
@@ -101,12 +111,12 @@
                 })
             });
 
-            alert("SUKSES! Data " + nama + " telah dicatat di Google Sheets.");
-            document.getElementById('adminNama').value = ""; // Reset input nama
+            alert("BERHASIL! Data " + nama + " masuk ke Google Sheets.");
+            document.getElementById('adminNama').value = ""; // Kosongkan kolom setelah simpan
             
         } catch (error) {
             console.error('Error!', error.message);
-            alert("Gagal mengirim data. Cek koneksi internet.");
+            alert("Gagal kirim data. Cek koneksi.");
         } finally {
             btn.innerText = "SIMPAN PEMBAYARAN";
             btn.disabled = false;
