@@ -1,7 +1,117 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Iuran - Secure Scan</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        :root { --primary: #27ae60; --bg: #f4f7f6; --dark: #2c3e50; }
+        /* Body dibuat terlihat (block) tanpa syarat PIN */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: var(--bg); 
+            margin: 0; 
+            padding: 15px; 
+            display: block !important; 
+        } 
+        .container { max-width: 500px; margin: auto; }
+        .card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        #reader { width: 100%; border-radius: 10px; overflow: hidden; margin-bottom: 15px; background: #000; }
+        label { display: block; font-weight: bold; margin-top: 15px; font-size: 13px; color: var(--dark); }
+        input, select { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; background: #fff; }
+        .btn-scan { background: #3498db; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+        .btn-save { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; margin-top: 20px; cursor: pointer; font-size: 16px; }
+        .btn-save:disabled { background: #bdc3c7; cursor: not-allowed; }
+    </style>
+</head>
 <body>
-    <h1>TEST ADMIN BISA DIBUKA</h1>
-    <p>Jika kamu melihat tulisan ini, berarti GitHub sudah update. Silakan paste kembali kode lengkapnya.</p>
+
+<div class="container">
+    <h2 style="text-align: center; color: var(--dark);">PANEL PENGURUS</h2>
+    
+    <div class="card">
+        <h3>Input Pembayaran</h3>
+        <div id="reader"></div>
+        <button class="btn-scan" onclick="startScanner()">BUKA KAMERA SCANNER</button>
+        
+        <label>Nama Warga (Hasil Scan)</label>
+        <input type="text" id="adminNama" placeholder="Nama akan muncul di sini..." readonly>
+        
+        <label>Bulan Iuran</label>
+        <select id="adminBulan">
+            <option>Januari</option><option>Februari</option><option>Maret</option>
+            <option>April</option><option>Mei</option><option>Juni</option>
+            <option>Juli</option><option>Agustus</option><option>September</option>
+            <option>Oktober</option><option>November</option><option>Desember</option>
+        </select>
+
+        <label>Jumlah (Rp)</label>
+        <input type="number" id="adminJumlah" value="15000">
+
+        <button class="btn-save" id="btnSimpan" onclick="simpanData()">SIMPAN PEMBAYARAN</button>
+    </div>
+
+    <p style="text-align:center;"><a href="index.html" style="color: #7f8c8d; text-decoration: none; font-size: 14px;">← Kembali ke Halaman Utama</a></p>
+</div>
+
+<script>
+    const html5QrCode = new Html5Qrcode("reader");
+
+    function startScanner() {
+        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+        
+        // Memastikan scanner dimulai dengan kamera belakang (environment)
+        html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
+            document.getElementById('adminNama').value = decodedText;
+            html5QrCode.stop();
+            alert("Scan Berhasil: " + decodedText);
+        }).catch((err) => {
+            console.error("Gagal buka kamera:", err);
+            alert("Error: Pastikan izin kamera sudah diberikan atau gunakan HTTPS.");
+        });
+    }
+
+    async function simpanData() {
+        const nama = document.getElementById('adminNama').value;
+        const bulan = document.getElementById('adminBulan').value;
+        const jumlah = document.getElementById('adminJumlah').value;
+        const btn = document.getElementById('btnSimpan');
+
+        // Link Web App yang kamu berikan
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbxeg9jNOP4rNJnpWpsV3hQDCtVFYdayUij4_cZ9-hqB65fFM6IRgC2Qh8FFvad9-2fT/exec';
+
+        if(!nama) {
+            alert("Nama kosong! Silakan scan barcode warga dulu.");
+            return;
+        }
+
+        btn.innerText = "SEDANG MENGIRIM...";
+        btn.disabled = true;
+
+        try {
+            // Mengirim data ke Google Sheets
+            await fetch(scriptURL, {
+                method: 'POST',
+                mode: 'no-cors', // Menghindari masalah CORS
+                body: JSON.stringify({ 
+                    nama: nama, 
+                    bulan: bulan, 
+                    jumlah: jumlah 
+                })
+            });
+
+            alert("SUKSES! Data " + nama + " telah dicatat di Google Sheets.");
+            document.getElementById('adminNama').value = ""; // Reset input nama
+            
+        } catch (error) {
+            console.error('Error!', error.message);
+            alert("Gagal mengirim data. Cek koneksi internet.");
+        } finally {
+            btn.innerText = "SIMPAN PEMBAYARAN";
+            btn.disabled = false;
+        }
+    }
+</script>
 </body>
 </html>
