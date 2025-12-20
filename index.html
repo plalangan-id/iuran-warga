@@ -3,67 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kalender Iuran Warga</title>
+    <title>Iuran Dsn. Plalangan-2026</title>
     <style>
-        :root { --primary: #27ae60; --danger: #e74c3c; --bg: #f8f9fa; }
-        body { background-color: var(--bg); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 15px; }
-        .container { max-width: 500px; margin: auto; }
-        header { text-align: center; margin-bottom: 20px; }
+        :root { --primary: #27ae60; --danger: #e74c3c; --bg: #f4f7f6; }
+        body { background-color: var(--bg); font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 15px; }
+        .container { max-width: 600px; margin: auto; }
         
-        .search-card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box; outline: none; text-align: center; }
+        header { text-align: center; margin-bottom: 25px; }
+        header h2 { margin-bottom: 5px; color: #2c3e50; font-size: 26px; }
+        header p { margin: 0; color: #7f8c8d; font-size: 18px; font-weight: bold; }
+
+        .search-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 25px; }
+        input { width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 10px; font-size: 18px; box-sizing: border-box; outline: none; text-align: center; font-weight: bold; }
         input:focus { border-color: var(--primary); }
 
-        /* Bagian yang saya ubah agar lebih relevan */
-        .info-warga { text-align: center; margin-bottom: 15px; display: none; padding: 15px; background: white; border-radius: 8px; border-left: 5px solid var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .info-warga p { margin: 0; font-size: 12px; color: #7f8c8d; text-transform: uppercase; letter-spacing: 1px; }
-        .info-warga h3 { margin: 5px 0 0 0; color: #333; font-size: 20px; font-weight: 800; }
+        .info-warga { text-align: center; margin-bottom: 20px; display: none; padding: 20px; background: white; border-radius: 12px; border-bottom: 5px solid var(--primary); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .info-warga p { margin: 0; font-size: 14px; color: #7f8c8d; text-transform: uppercase; letter-spacing: 1px; }
+        .info-warga h3 { margin: 8px 0 0 0; color: #2c3e50; font-size: 24px; font-weight: 800; }
 
-        .grid-kalender { 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 10px; 
-        }
+        .grid-kalender { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
 
         .box-bulan {
             background: white;
-            padding: 15px 5px;
-            border-radius: 10px;
+            padding: 20px 10px;
+            border-radius: 12px;
             text-align: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.08);
             display: flex;
             flex-direction: column;
             justify-content: center;
-            border: 1px solid #eee;
+            transition: 0.3s;
         }
 
-        .bulan-nama { font-size: 11px; font-weight: bold; color: #7f8c8d; text-transform: uppercase; }
-        .status-ikon { font-size: 20px; margin: 5px 0; }
+        .bulan-nama { font-size: 16px; font-weight: 800; text-transform: uppercase; margin-bottom: 5px; }
+        .status-ikon { font-size: 28px; margin: 5px 0; }
+        .status-teks { font-size: 14px; font-weight: 900; letter-spacing: 1px; }
         
-        .lunas { border-top: 4px solid var(--primary); background: #f0fff4; }
+        /* WARNA HIJAU UNTUK LUNAS */
+        .lunas { background: #ebfaef; border: 2px solid var(--primary); }
+        .lunas .bulan-nama { color: #1e8449; }
         .lunas .status-ikon { color: var(--primary); }
-        .lunas .bulan-nama { color: #27ae60; }
+        .lunas .status-teks { color: var(--primary); }
 
-        .belum { border-top: 4px solid #bdc3c7; background: #fff; }
-        .belum .status-ikon { color: #bdc3c7; }
+        /* WARNA MERAH UNTUK BELUM BAYAR */
+        .belum { background: #fdf2f2; border: 2px solid var(--danger); }
+        .belum .bulan-nama { color: #c0392b; }
+        .belum .status-ikon { color: var(--danger); }
+        .belum .status-teks { color: var(--danger); }
 
-        .status-teks { font-size: 9px; font-weight: bold; }
-        .loading { text-align: center; display: none; color: #7f8c8d; }
+        .loading { text-align: center; display: none; color: #7f8c8d; font-weight: bold; padding: 20px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <header>
-        <h2 style="margin-bottom:5px;">STATUS IURAN 2026</h2>
-        <p style="margin-top:0; color:#666; font-size: 14px;">RW 05 - PLALANGAN</p>
+        <h2>STATUS IURAN 2026</h2>
+        <p>Dsn. Plalangan</p>
     </header>
 
     <div class="search-card">
-        <input type="text" id="inputNama" placeholder="Cari Nama Anda..." onkeyup="cariTagihan()">
+        <input type="text" id="inputNama" placeholder="KETIK NAMA ANDA..." onkeyup="cariTagihan()">
     </div>
 
-    <div id="loading" class="loading">Mengecek database...</div>
+    <div id="loading" class="loading">Mengecek Database...</div>
 
     <div id="infoWarga" class="info-warga">
         <p>Nama Pembayar:</p>
@@ -121,10 +124,10 @@
                     card.className = `box-bulan ${isLunas ? 'lunas' : 'belum'}`;
                     
                     card.innerHTML = `
-                        <span class="bulan-nama">${bulan.substring(0, 3)}</span>
-                        <span class="status-ikon">${isLunas ? '✅' : '⚪'}</span>
-                        <span class="status-teks" style="color: ${isLunas ? '#27ae60' : '#bdc3c7'}">
-                            ${isLunas ? 'LUNAS' : 'BELUM'}
+                        <span class="bulan-nama">${bulan}</span>
+                        <span class="status-ikon">${isLunas ? '✅' : '❌'}</span>
+                        <span class="status-teks">
+                            ${isLunas ? 'LUNAS' : 'BELUM BAYAR'}
                         </span>
                     `;
                     container.appendChild(card);
@@ -132,10 +135,10 @@
             } else {
                 loading.style.display = "none";
                 info.style.display = "none";
-                container.innerHTML = "<p style='grid-column: span 3; text-align: center; color: #999; font-size: 14px; margin-top: 20px;'>Nama tidak ditemukan dalam database.</p>";
+                container.innerHTML = "<p style='grid-column: span 2; text-align: center; font-weight: bold; color: #e74c3c; background: white; padding: 20px; border-radius: 10px;'>Nama tidak ditemukan.</p>";
             }
         } catch (e) {
-            loading.innerText = "Gagal memuat data.";
+            loading.innerText = "Koneksi Bermasalah.";
         }
     }
 </script>
