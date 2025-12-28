@@ -3,132 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal Iuran 2026</title>
+    <title>Portal Iuran Plalangan</title>
     <style>
-        :root { --primary: #27ae60; --danger: #e74c3c; --bg: #f4f7f6; --card-bg: #ffffff; --text: #2c3e50; }
-        body { background-color: var(--bg); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 15px; color: var(--text); }
+        :root { --primary: #27ae60; --danger: #e74c3c; --bg: #f4f7f6; --card: #ffffff; --text: #2c3e50; }
+        body { background-color: var(--bg); font-family: sans-serif; margin: 0; padding: 15px; color: var(--text); }
         .container { max-width: 500px; margin: auto; }
-        .info-box { background: #fff9c4; padding: 15px; border-radius: 12px; margin-bottom: 20px; border-left: 5px solid #fbc02d; display: none; }
-        .search-area { background: var(--card-bg); padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        input { width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 10px; font-size: 18px; text-align: center; box-sizing: border-box; outline: none; }
+        .info-box { background: #fff9c4; padding: 15px; border-radius: 12px; margin-bottom: 20px; border-left: 5px solid #fbc02d; display: none; font-size: 14px; }
+        .search-area { background: var(--card); padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        input { width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 10px; font-size: 18px; text-align: center; box-sizing: border-box; }
         .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 15px; }
-        .card { background: var(--card-bg); padding: 10px 5px; border-radius: 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 2px solid #ddd; }
+        .card { background: var(--card); padding: 10px 5px; border-radius: 10px; text-align: center; border: 2px solid #ddd; }
         .lunas { border-color: var(--primary); background: #ebfaef; color: var(--primary); }
         .belum { border-color: var(--danger); background: #fdf2f2; color: var(--danger); }
-        .kas-info { background: var(--card-bg); padding: 20px; border-radius: 15px; margin-top: 20px; border: 1px solid #ddd; }
-        .rekap-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
-        .rekap-table td { padding: 8px; border-bottom: 1px solid #eee; }
+        .box-data { background: var(--card); padding: 20px; border-radius: 15px; margin-top: 20px; border: 1px solid #ddd; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+        td { padding: 8px; border-bottom: 1px solid #eee; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2 style="text-align:center">🏡 Plalangan Digital</h2>
+    <h3 style="text-align:center">🏡 Monitoring Iuran Plalangan</h3>
 
     <div id="pBox" class="info-box">
-        <strong>📢 PENGUMUMAN:</strong> <br><span id="pIsi"></span>
+        <strong>📢 INFO:</strong> <br><span id="pIsi"></span>
     </div>
 
     <div class="search-area">
-        <input type="text" id="inNama" placeholder="Ketik Nama (Contoh: Ahmad)" onkeyup="cariData()">
+        <input type="text" id="inNama" placeholder="Ketik Nama..." onkeyup="cariData()">
     </div>
 
     <div id="resHead" style="display:none; text-align:center; margin-bottom:15px;">
-        <h3 id="resNama"></h3>
+        <h4 id="resNama" style="margin:0; color:var(--primary)"></h4>
     </div>
 
     <div id="gridBulan" class="grid"></div>
 
-    <div class="kas-info">
-        <small>Sisa Saldo Kas Saat Ini:</small>
-        <h2 id="sisaKas" style="color:var(--primary); font-size:32px; margin:5px 0;">Rp 0</h2>
-        <hr>
-        <small>Rincian Pengeluaran:</small>
-        <div id="listKeluar" style="font-size: 12px; margin-top:5px"></div>
+    <div class="box-data">
+        <small>Sisa Saldo Kas:</small>
+        <h2 id="sisaKas" style="color:var(--primary); margin:5px 0;">Rp 0</h2>
+        <div id="listKeluar" style="font-size: 11px; color: #666; margin-top:10px;"></div>
     </div>
 
-    <div class="kas-info">
-        <strong>Penerimaan Per Bulan:</strong>
-        <table class="rekap-table"><tbody id="listRekapBulan"></tbody></table>
+    <div class="box-data">
+        <strong>Rekap Iuran Masuk:</strong>
+        <table id="listRekapBulan"></table>
     </div>
 </div>
 
 <script>
+    // Link CSV Anda
     const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSqOacaVgTEVIQdIOgsacKIqQtqfTqUH5F_UMoI5R6ci5fxg2Px6BHrdlfntfdR7Md7T3TshmUHtG7V/pub?gid=0&single=true&output=csv';
 
     async function init() {
         try {
-            const resp = await fetch(csvUrl + '&v=' + new Date().getTime());
+            const resp = await fetch(csvUrl + '&cache=' + new Date().getTime());
             const text = await resp.text();
+            
+            // Konversi teks CSV ke Array
             const rows = text.split("\n").map(r => r.split(",").map(c => c.trim().replace(/"/g, '')));
             window.db = rows;
 
-            // 1. Cari Pengumuman (Kolom E / Indeks 4)
-            const rowInfo = rows.find(r => r[4] && r[4] !== "pengumuman");
-            if(rowInfo) {
+            // 1. Ambil Pengumuman (Kolom E / Indeks 4)
+            const infoRow = rows.find((r, idx) => idx > 0 && r[4] && r[4] !== "");
+            if(infoRow) {
                 document.getElementById('pBox').style.display = 'block';
-                document.getElementById('pIsi').innerText = rowInfo[4];
+                document.getElementById('pIsi').innerText = infoRow[4];
             }
 
-            // 2. Hitung Saldo & Pengeluaran
-            let saldoAwal = 0;
-            const rowSaldo = rows.find(r => r[7] && r[7] !== "" && !isNaN(r[7]));
-            if(rowSaldo) saldoAwal = parseInt(rowSaldo[7]) || 0;
+            // 2. Hitung Keuangan
+            let saldoLalu = 0;
+            const saldoRow = rows.find((r, idx) => idx > 0 && r[7] && !isNaN(r[7].replace(/[^0-9]/g, '')));
+            if(saldoRow) saldoLalu = parseInt(saldoRow[7].replace(/[^0-9]/g, '')) || 0;
 
-            let totalMasuk = 0;
-            let totalKeluar = 0;
-            let rekapBln = {};
-            let txtKeluar = "";
+            let totalIuran = 0, totalKeluar = 0, rekapBulan = {}, listK = "";
 
-            rows.forEach((r, i) => {
-                if(i === 0) return;
-                // Iuran (Kolom D / Indeks 3)
-                if(r[3] && !isNaN(r[3])) {
-                    let nominal = parseInt(r[3]);
-                    totalMasuk += nominal;
-                    if(r[2]) rekapBln[r[2]] = (rekapBln[r[2]] || 0) + nominal;
+            rows.forEach((r, idx) => {
+                if(idx === 0) return;
+
+                // Hitung Iuran (Kolom D / Indeks 3)
+                if(r[3]) {
+                    let n = parseInt(r[3].replace(/[^0-9]/g, '')) || 0;
+                    totalIuran += n;
+                    if(r[2]) rekapBulan[r[2]] = (rekapBulan[r[2]] || 0) + n;
                 }
-                // Keluar (Kolom G / Indeks 6)
-                if(r[6] && !isNaN(r[6])) {
-                    let nominalK = parseInt(r[6]);
-                    totalKeluar += nominalK;
-                    txtKeluar += `• ${r[5]} (Rp ${nominalK.toLocaleString()})<br>`;
+
+                // Hitung Keluar (Kolom G / Indeks 6)
+                if(r[6]) {
+                    let nk = parseInt(r[6].replace(/[^0-9]/g, '')) || 0;
+                    totalKeluar += nk;
+                    listK += `• ${r[5] || 'Pengeluaran'} (Rp ${nk.toLocaleString()})<br>`;
                 }
             });
 
-            document.getElementById('sisaKas').innerText = "Rp " + (saldoAwal + totalMasuk - totalKeluar).toLocaleString('id-ID');
-            document.getElementById('listKeluar').innerHTML = txtKeluar || "Belum ada pengeluaran.";
+            // Tampilkan Keuangan
+            document.getElementById('sisaKas').innerText = "Rp " + (saldoLalu + totalIuran - totalKeluar).toLocaleString('id-ID');
+            document.getElementById('listKeluar').innerHTML = listK || "Belum ada pengeluaran.";
 
-            let htmlR = "";
+            // Tampilkan Rekap Tabel
+            let htmlRekap = "";
             ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"].forEach(b => {
-                if(rekapBln[b]) htmlR += `<tr><td>${b}</td><td style="text-align:right">Rp ${rekapBln[b].toLocaleString()}</td></tr>`;
+                if(rekapBulan[b]) htmlRekap += `<tr><td>${b}</td><td style="text-align:right">Rp ${rekapBulan[b].toLocaleString()}</td></tr>`;
             });
-            document.getElementById('listRekapBulan').innerHTML = htmlR || "Belum ada iuran.";
+            document.getElementById('listRekapBulan').innerHTML = htmlRekap;
 
-        } catch (e) { console.error(e); }
+        } catch (e) {
+            console.error("Error muat data:", e);
+            document.body.innerHTML = "<div style='padding:50px; text-align:center;'>Gagal memuat data. Periksa koneksi internet Anda.</div>";
+        }
     }
 
     function cariData() {
         let q = document.getElementById('inNama').value.toLowerCase().trim();
         let grid = document.getElementById('gridBulan');
         let head = document.getElementById('resHead');
+        
         if(q.length < 2) { grid.innerHTML = ""; head.style.display="none"; return; }
 
         let matches = window.db.filter(r => r[1] && r[1].toLowerCase().includes(q));
+        
         if(matches.length > 0) {
             head.style.display = "block";
-            document.getElementById('resNama').innerText = matches[0][1].toUpperCase();
+            document.getElementById('resNama').innerText = "Nama: " + matches[0][1].toUpperCase();
             grid.innerHTML = "";
             ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"].forEach(b => {
                 let ada = matches.find(m => m[2] === b);
                 let div = document.createElement('div');
                 div.className = `card ${ada ? 'lunas' : 'belum'}`;
-                div.innerHTML = `<small>${b.substring(0,3)}</small><br>${ada ? '✅' : '❌'}`;
+                div.innerHTML = `<small style="font-size:9px">${b.substring(0,3)}</small><br>${ada ? '✅' : '❌'}`;
                 grid.appendChild(div);
             });
         }
     }
-    init();
+
+    window.onload = init;
 </script>
 </body>
 </html>
