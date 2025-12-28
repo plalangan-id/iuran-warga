@@ -1,108 +1,134 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Iuran 2026</title>
+    <style>
+        :root { --primary: #27ae60; --danger: #e74c3c; --bg: #f4f7f6; --card-bg: #ffffff; --text: #2c3e50; }
+        body { background-color: var(--bg); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 15px; color: var(--text); }
+        .container { max-width: 500px; margin: auto; }
+        .info-box { background: #fff9c4; padding: 15px; border-radius: 12px; margin-bottom: 20px; border-left: 5px solid #fbc02d; display: none; }
+        .search-area { background: var(--card-bg); padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        input { width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 10px; font-size: 18px; text-align: center; box-sizing: border-box; outline: none; }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 15px; }
+        .card { background: var(--card-bg); padding: 10px 5px; border-radius: 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 2px solid #ddd; }
+        .lunas { border-color: var(--primary); background: #ebfaef; color: var(--primary); }
+        .belum { border-color: var(--danger); background: #fdf2f2; color: var(--danger); }
+        .kas-info { background: var(--card-bg); padding: 20px; border-radius: 15px; margin-top: 20px; border: 1px solid #ddd; }
+        .rekap-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+        .rekap-table td { padding: 8px; border-bottom: 1px solid #eee; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2 style="text-align:center">🏡 Plalangan Digital</h2>
+
+    <div id="pBox" class="info-box">
+        <strong>📢 PENGUMUMAN:</strong> <br><span id="pIsi"></span>
+    </div>
+
+    <div class="search-area">
+        <input type="text" id="inNama" placeholder="Ketik Nama (Contoh: Ahmad)" onkeyup="cariData()">
+    </div>
+
+    <div id="resHead" style="display:none; text-align:center; margin-bottom:15px;">
+        <h3 id="resNama"></h3>
+    </div>
+
+    <div id="gridBulan" class="grid"></div>
+
+    <div class="kas-info">
+        <small>Sisa Saldo Kas Saat Ini:</small>
+        <h2 id="sisaKas" style="color:var(--primary); font-size:32px; margin:5px 0;">Rp 0</h2>
+        <hr>
+        <small>Rincian Pengeluaran:</small>
+        <div id="listKeluar" style="font-size: 12px; margin-top:5px"></div>
+    </div>
+
+    <div class="kas-info">
+        <strong>Penerimaan Per Bulan:</strong>
+        <table class="rekap-table"><tbody id="listRekapBulan"></tbody></table>
+    </div>
+</div>
+
 <script>
     const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSqOacaVgTEVIQdIOgsacKIqQtqfTqUH5F_UMoI5R6ci5fxg2Px6BHrdlfntfdR7Md7T3TshmUHtG7V/pub?gid=0&single=true&output=csv';
 
     async function init() {
         try {
-            const response = await fetch(csvUrl + '&nocache=' + new Date().getTime());
-            const data = await response.text();
-            
-            // Parsing baris dan buang baris yang benar-benar kosong
-            const allRows = data.split(/\r?\n/).map(row => {
-                return row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(cell => cell.replace(/^"|"$/g, '').trim());
-            });
-            
-            // Simpan ke window.db hanya baris yang punya data
-            window.db = allRows.filter(r => r.join('').length > 0);
+            const resp = await fetch(csvUrl + '&v=' + new Date().getTime());
+            const text = await resp.text();
+            const rows = text.split("\n").map(r => r.split(",").map(c => c.trim().replace(/"/g, '')));
+            window.db = rows;
 
-            if (window.db.length < 2) return;
-
-            // 1. Ambil Pengumuman (Kolom E / Indeks 4) dari baris manapun yang ada isinya
-            const barisInfo = window.db.find(r => r[4] && r[4] !== "");
-            if (barisInfo) {
+            // 1. Cari Pengumuman (Kolom E / Indeks 4)
+            const rowInfo = rows.find(r => r[4] && r[4] !== "pengumuman");
+            if(rowInfo) {
                 document.getElementById('pBox').style.display = 'block';
-                document.getElementById('pIsi').innerText = barisInfo[4];
+                document.getElementById('pIsi').innerText = rowInfo[4];
             }
 
-            // 2. Ambil Saldo Awal (Kolom H / Indeks 7)
-            const barisSaldo = window.db.find(r => r[7] && r[7] !== "");
-            let saldoLalu = barisSaldo ? parseInt(barisSaldo[7].replace(/[^0-9]/g, '')) || 0 : 0;
+            // 2. Hitung Saldo & Pengeluaran
+            let saldoAwal = 0;
+            const rowSaldo = rows.find(r => r[7] && r[7] !== "" && !isNaN(r[7]));
+            if(rowSaldo) saldoAwal = parseInt(rowSaldo[7]) || 0;
 
-            let totalIuran = 0;
+            let totalMasuk = 0;
             let totalKeluar = 0;
-            let rekapBulan = {};
-            let htmlKeluar = "";
+            let rekapBln = {};
+            let txtKeluar = "";
 
-            for(let i=1; i < window.db.length; i++) {
-                let r = window.db[i];
-
-                // Hitung Iuran (Cek Kolom B Nama & Kolom D Nominal)
-                if(r[1] && r[3]) {
-                    let nominal = parseInt(r[3].replace(/[^0-9]/g, '')) || 0;
-                    totalIuran += nominal;
-                    if(r[2]) rekapBulan[r[2]] = (rekapBulan[r[2]] || 0) + nominal;
+            rows.forEach((r, i) => {
+                if(i === 0) return;
+                // Iuran (Kolom D / Indeks 3)
+                if(r[3] && !isNaN(r[3])) {
+                    let nominal = parseInt(r[3]);
+                    totalMasuk += nominal;
+                    if(r[2]) rekapBln[r[2]] = (rekapBln[r[2]] || 0) + nominal;
                 }
-
-                // Hitung Pengeluaran (Kolom F & G)
-                if(r[5] && r[6]) {
-                    let nominalKeluar = parseInt(r[6].replace(/[^0-9]/g, '')) || 0;
-                    totalKeluar += nominalKeluar;
-                    htmlKeluar += `• ${r[5]} (<span style="color:var(--danger)">-Rp ${nominalKeluar.toLocaleString('id-ID')}</span>)<br>`;
-                }
-            }
-
-            // Tampilkan ke layar
-            document.getElementById('totalKas').innerText = "Rp " + (saldoLalu + totalIuran).toLocaleString('id-ID');
-            document.getElementById('sisaKas').innerText = "Rp " + (saldoLalu + totalIuran - totalKeluar).toLocaleString('id-ID');
-            document.getElementById('listKeluar').innerHTML = htmlKeluar || "Tidak ada catatan pengeluaran.";
-
-            let htmlRekap = "";
-            const bulanFull = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
-            bulanFull.forEach(b => {
-                if(rekapBulan[b]) {
-                    htmlRekap += `<tr><td>${b}</td><td style="text-align:right; font-weight:bold; color:var(--primary)">Rp ${rekapBulan[b].toLocaleString('id-ID')}</td></tr>`;
+                // Keluar (Kolom G / Indeks 6)
+                if(r[6] && !isNaN(r[6])) {
+                    let nominalK = parseInt(r[6]);
+                    totalKeluar += nominalK;
+                    txtKeluar += `• ${r[5]} (Rp ${nominalK.toLocaleString()})<br>`;
                 }
             });
-            document.getElementById('listRekapBulan').innerHTML = htmlRekap || "<tr><td>Belum ada data iuran.</td></tr>";
 
-        } catch (error) {
-            console.error("Gagal Memuat:", error);
-        }
+            document.getElementById('sisaKas').innerText = "Rp " + (saldoAwal + totalMasuk - totalKeluar).toLocaleString('id-ID');
+            document.getElementById('listKeluar').innerHTML = txtKeluar || "Belum ada pengeluaran.";
+
+            let htmlR = "";
+            ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"].forEach(b => {
+                if(rekapBln[b]) htmlR += `<tr><td>${b}</td><td style="text-align:right">Rp ${rekapBln[b].toLocaleString()}</td></tr>`;
+            });
+            document.getElementById('listRekapBulan').innerHTML = htmlR || "Belum ada iuran.";
+
+        } catch (e) { console.error(e); }
     }
 
     function cariData() {
-        let keyword = document.getElementById('inNama').value.toLowerCase().trim();
+        let q = document.getElementById('inNama').value.toLowerCase().trim();
         let grid = document.getElementById('gridBulan');
-        let resHead = document.getElementById('resHead');
+        let head = document.getElementById('resHead');
+        if(q.length < 2) { grid.innerHTML = ""; head.style.display="none"; return; }
 
-        if(keyword.length < 3) { grid.innerHTML = ""; resHead.style.display = "none"; return; }
-
-        // Filter hanya baris yang ada namanya (Kolom B)
-        let matches = window.db.filter(row => row[1] && row[1].toLowerCase().includes(keyword));
-
+        let matches = window.db.filter(r => r[1] && r[1].toLowerCase().includes(q));
         if(matches.length > 0) {
-            resHead.style.display = "block";
+            head.style.display = "block";
             document.getElementById('resNama').innerText = matches[0][1].toUpperCase();
             grid.innerHTML = "";
-            
-            const bulanFull = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
-            const bulanSingkat = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agt","Sep","Okt","Nov","Des"];
-
-            bulanFull.forEach((b, idx) => {
-                let dataBayar = matches.find(m => m[2] === b);
-                let box = document.createElement('div');
-                box.className = `card ${dataBayar ? 'lunas' : 'belum'}`;
-                box.innerHTML = `<small>${bulanSingkat[idx]}</small><br>${dataBayar ? '✅' : '❌'}<br><small>${dataBayar ? 'LUNAS' : 'BELUM'}</small>`;
-                grid.appendChild(box);
+            ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"].forEach(b => {
+                let ada = matches.find(m => m[2] === b);
+                let div = document.createElement('div');
+                div.className = `card ${ada ? 'lunas' : 'belum'}`;
+                div.innerHTML = `<small>${b.substring(0,3)}</small><br>${ada ? '✅' : '❌'}`;
+                grid.appendChild(div);
             });
-        } else {
-            grid.innerHTML = "<p style='grid-column: span 4; text-align: center; font-size: 12px; color: var(--danger);'>Nama tidak ditemukan</p>";
         }
     }
-
-    function gantiMode() {
-        document.body.classList.toggle('dark-mode');
-        document.getElementById('txtM').innerText = document.body.classList.contains('dark-mode') ? "☀️ Mode Terang" : "🌙 Mode Gelap";
-    }
-
-    window.onload = init;
+    init();
 </script>
+</body>
+</html>
