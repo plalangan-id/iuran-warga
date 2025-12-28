@@ -1,103 +1,68 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
-    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Iuran - Secure Scan</title>
-    <script src="https://unpkg.com/html5-qrcode"></script>
+    <title>Admin Iuran</title>
     <style>
-        :root { --primary: #27ae60; --danger: #e74c3c; --bg: #f4f7f6; --dark: #2c3e50; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 15px; }
-        .container { max-width: 500px; margin: auto; }
-        .card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        #reader { width: 100%; border-radius: 10px; overflow: hidden; margin-bottom: 15px; background: #000; }
-        label { display: block; font-weight: bold; margin-top: 15px; font-size: 13px; color: var(--dark); }
-        input, select, textarea { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
-        .btn-save { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; margin-top: 20px; cursor: pointer; }
-        .btn-scan { background: #3498db; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; margin-bottom: 10px; }
-        .btn-out { background: var(--danger); }
+        body { font-family: sans-serif; padding: 20px; background: #f0f0f0; }
+        .box { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        input, select { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-iuran { background: #27ae60; color: white; }
+        .btn-keluar { background: #e74c3c; color: white; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2 style="text-align: center; color: var(--dark);">PANEL PENGURUS</h2>
-    
-    <div class="card">
-        <h3>Input Pembayaran</h3>
-        <div id="reader"></div>
-        <button class="btn-scan" onclick="startScanner()">BUKA KAMERA SCANNER</button>
-        <label>Nama Warga</label>
-        <input type="text" id="adminNama" placeholder="Ketik nama...">
-        <label>Bulan</label>
-        <select id="adminBulan">
+    <div class="box">
+        <h3>Input Pembayaran Warga</h3>
+        <input type="text" id="nama" placeholder="Nama Warga">
+        <select id="bulan">
             <option>Januari</option><option>Februari</option><option>Maret</option>
             <option>April</option><option>Mei</option><option>Juni</option>
             <option>Juli</option><option>Agustus</option><option>September</option>
             <option>Oktober</option><option>November</option><option>Desember</option>
         </select>
-        <label>Jumlah (Rp)</label>
-        <input type="number" id="adminJumlah" value="15000">
-        <button class="btn-save" id="btnIuran" onclick="simpan('iuran')">SIMPAN PEMBAYARAN</button>
+        <input type="number" id="jumlah" placeholder="Nominal (Contoh: 15000)">
+        <button class="btn-iuran" onclick="kirim('tambahIuran')">SIMPAN PEMBAYARAN</button>
     </div>
 
-    <div class="card">
-        <h3>Input Pengeluaran</h3>
-        <label>Keterangan</label>
-        <input type="text" id="outKet" placeholder="Contoh: Beli Lampu">
-        <label>Nominal (Rp)</label>
-        <input type="number" id="outJml" placeholder="0">
-        <button class="btn-save btn-out" id="btnKeluar" onclick="simpan('keluar')">SIMPAN PENGELUARAN</button>
+    <div class="box">
+        <h3>Input Pengeluaran Kas</h3>
+        <input type="text" id="ket" placeholder="Keterangan (Contoh: Beli Lampu)">
+        <input type="number" id="jmlKeluar" placeholder="Nominal Pengeluaran">
+        <button class="btn-keluar" onclick="kirim('tambahKeluar')">SIMPAN PENGELUARAN</button>
     </div>
 
-    <div class="card">
-        <h3>Update Pengumuman</h3>
-        <textarea id="infoTeks" rows="3" placeholder="Tulis pengumuman..."></textarea>
-        <button class="btn-save" style="background: #f39c12;" id="btnInfo" onclick="simpan('info')">UPDATE PENGUMUMAN</button>
-    </div>
-</div>
+    <script>
+        // MASUKKAN URL EXEC ANDA DI SINI
+        const URL_SCRIPT = 'https://script.google.com/macros/s/AKfycbxjbh_69HuT8d-Ul2G0E9hBO3rFjOEaoUmgZSSwKeU89F27xv287oRSBmnzmUxO2BHg/exec';
 
-<script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbybk3sFPtQkDibxnEPQ1Gmb5keeF-VspxG33Uw2__FjlKds4eRS-_GAXetoR93y0JC2/exec';
+        async function kirim(aksi) {
+            let data = { aksi: aksi };
+            if (aksi === 'tambahIuran') {
+                data.nama = document.getElementById('nama').value;
+                data.bulan = document.getElementById('bulan').value;
+                data.jumlah = document.getElementById('jumlah').value;
+            } else {
+                data.keterangan = document.getElementById('ket').value;
+                data.jumlahKeluar = document.getElementById('jmlKeluar').value;
+            }
 
-    async function simpan(tipe) {
-        let payload = { aksi: '' };
-        let btn = "";
+            if(!confirm("Yakin simpan data?")) return;
 
-        if(tipe === 'iuran') {
-            payload = { aksi: 'tambahIuran', nama: document.getElementById('adminNama').value, bulan: document.getElementById('adminBulan').value, jumlah: document.getElementById('adminJumlah').value };
-            btn = document.getElementById('btnIuran');
-        } else if(tipe === 'keluar') {
-            payload = { aksi: 'tambahKeluar', keterangan: document.getElementById('outKet').value, jumlahKeluar: document.getElementById('outJml').value };
-            btn = document.getElementById('btnKeluar');
-        } else {
-            payload = { aksi: 'updateInfo', pengumuman: document.getElementById('infoTeks').value };
-            btn = document.getElementById('btnInfo');
+            try {
+                await fetch(URL_SCRIPT, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify(data)
+                });
+                alert("Data Berhasil Terkirim!");
+                location.reload();
+            } catch (e) {
+                alert("Gagal: " + e);
+            }
         }
-
-        const txt = btn.innerText;
-        btn.innerText = "MENGIRIM...";
-        btn.disabled = true;
-
-        try {
-            await fetch(scriptURL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-            alert("Berhasil disimpan!");
-            location.reload(); 
-        } catch (e) {
-            alert("Gagal terhubung ke server.");
-        } finally {
-            btn.innerText = txt;
-            btn.disabled = false;
-        }
-    }
-
-    function startScanner() {
-        const scanner = new Html5Qrcode("reader");
-        scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (txt) => {
-            document.getElementById('adminNama').value = txt;
-            scanner.stop();
-        });
-    }
-</script>
+    </script>
 </body>
 </html>
