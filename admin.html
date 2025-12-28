@@ -1,68 +1,127 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Iuran</title>
+    <title>Admin Iuran - Secure Scan</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        body { font-family: sans-serif; padding: 20px; background: #f0f0f0; }
-        .box { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        input, select { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .btn-iuran { background: #27ae60; color: white; }
-        .btn-keluar { background: #e74c3c; color: white; }
+        :root { --primary: #27ae60; --bg: #f4f7f6; --dark: #2c3e50; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: var(--bg); 
+            margin: 0; 
+            padding: 15px; 
+            display: block !important; 
+        } 
+        .container { max-width: 500px; margin: auto; }
+        .card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        #reader { width: 100%; border-radius: 10px; overflow: hidden; margin-bottom: 15px; background: #000; }
+        label { display: block; font-weight: bold; margin-top: 15px; font-size: 13px; color: var(--dark); }
+        
+        /* Input nama dibuat normal agar keyboard muncul */
+        input, select { 
+            width: 100%; 
+            padding: 12px; 
+            margin-top: 5px; 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            box-sizing: border-box; 
+            font-size: 16px; 
+            background: #fff;
+            -webkit-appearance: none; /* Menghindari bug styling di iPhone */
+        }
+
+        .btn-scan { background: #3498db; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+        .btn-save { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; margin-top: 20px; cursor: pointer; font-size: 16px; }
+        .btn-save:disabled { background: #bdc3c7; cursor: not-allowed; }
     </style>
 </head>
 <body>
 
-    <div class="box">
-        <h3>Input Pembayaran Warga</h3>
-        <input type="text" id="nama" placeholder="Nama Warga">
-        <select id="bulan">
+<div class="container">
+    <h2 style="text-align: center; color: var(--dark);">PANEL PENGURUS</h2>
+    
+    <div class="card">
+        <h3>Input Pembayaran</h3>
+        <div id="reader"></div>
+        <button class="btn-scan" onclick="startScanner()">BUKA KAMERA SCANNER</button>
+        
+        <label>Nama Warga (Bisa diketik manual)</label>
+        <input type="text" id="adminNama" placeholder="Ketik nama atau gunakan scan...">
+        
+        <label>Bulan Iuran</label>
+        <select id="adminBulan">
             <option>Januari</option><option>Februari</option><option>Maret</option>
             <option>April</option><option>Mei</option><option>Juni</option>
             <option>Juli</option><option>Agustus</option><option>September</option>
             <option>Oktober</option><option>November</option><option>Desember</option>
         </select>
-        <input type="number" id="jumlah" placeholder="Nominal (Contoh: 15000)">
-        <button class="btn-iuran" onclick="kirim('tambahIuran')">SIMPAN PEMBAYARAN</button>
+
+        <label>Jumlah (Rp)</label>
+        <input type="number" id="adminJumlah" value="15000">
+
+        <button class="btn-save" id="btnSimpan" onclick="simpanData()">SIMPAN PEMBAYARAN</button>
     </div>
 
-    <div class="box">
-        <h3>Input Pengeluaran Kas</h3>
-        <input type="text" id="ket" placeholder="Keterangan (Contoh: Beli Lampu)">
-        <input type="number" id="jmlKeluar" placeholder="Nominal Pengeluaran">
-        <button class="btn-keluar" onclick="kirim('tambahKeluar')">SIMPAN PENGELUARAN</button>
-    </div>
+    <p style="text-align:center;"><a href="index.html" style="color: #7f8c8d; text-decoration: none; font-size: 14px;">← Kembali ke Halaman Utama</a></p>
+</div>
 
-    <script>
-        // MASUKKAN URL EXEC ANDA DI SINI
-        const URL_SCRIPT = 'https://script.google.com/macros/s/AKfycbxn5AaRcjqNG_9TaNnjfyWSEnBP-tzg3bS2Ib2UmO5KsSLqgAqjhYusVbjpBuhcSa6M/exec';
+<script>
+    const html5QrCode = new Html5Qrcode("reader");
 
-        async function kirim(aksi) {
-            let data = { aksi: aksi };
-            if (aksi === 'tambahIuran') {
-                data.nama = document.getElementById('nama').value;
-                data.bulan = document.getElementById('bulan').value;
-                data.jumlah = document.getElementById('jumlah').value;
-            } else {
-                data.keterangan = document.getElementById('ket').value;
-                data.jumlahKeluar = document.getElementById('jmlKeluar').value;
-            }
+    function startScanner() {
+        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+        
+        html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
+            document.getElementById('adminNama').value = decodedText;
+            html5QrCode.stop();
+            alert("Scan Berhasil: " + decodedText);
+        }).catch((err) => {
+            console.error("Gagal buka kamera:", err);
+            alert("Error: Pastikan izin kamera sudah diberikan.");
+        });
+    }
 
-            if(!confirm("Yakin simpan data?")) return;
+    async function simpanData() {
+        const nama = document.getElementById('adminNama').value;
+        const bulan = document.getElementById('adminBulan').value;
+        const jumlah = document.getElementById('adminJumlah').value;
+        const btn = document.getElementById('btnSimpan');
 
-            try {
-                await fetch(URL_SCRIPT, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    body: JSON.stringify(data)
-                });
-                alert("Data Berhasil Terkirim!");
-                location.reload();
-            } catch (e) {
-                alert("Gagal: " + e);
-            }
+        // Menggunakan Web App URL milikmu
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbxeg9jNOP4rNJnpWpsV3hQDCtVFYdayUij4_cZ9-hqB65fFM6IRgC2Qh8FFvad9-2fT/exec';
+
+        if(!nama) {
+            alert("Tolong isi nama warga (ketik manual atau scan)!");
+            return;
         }
-    </script>
+
+        btn.innerText = "SEDANG MENGIRIM...";
+        btn.disabled = true;
+
+        try {
+            await fetch(scriptURL, {
+                method: 'POST',
+                mode: 'no-cors', 
+                body: JSON.stringify({ 
+                    nama: nama, 
+                    bulan: bulan, 
+                    jumlah: jumlah 
+                })
+            });
+
+            alert("BERHASIL! Data " + nama + " masuk ke Google Sheets.");
+            document.getElementById('adminNama').value = ""; // Kosongkan kolom setelah simpan
+            
+        } catch (error) {
+            console.error('Error!', error.message);
+            alert("Gagal kirim data. Cek koneksi.");
+        } finally {
+            btn.innerText = "SIMPAN PEMBAYARAN";
+            btn.disabled = false;
+        }
+    }
+</script>
 </body>
 </html>
