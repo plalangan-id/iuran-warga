@@ -1,70 +1,4 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal Iuran 2026</title>
-    <style>
-        :root { --primary: #27ae60; --danger: #e74c3c; --bg: #f4f7f6; --card-bg: #ffffff; --text: #2c3e50; }
-        body.dark-mode { --bg: #121212; --card-bg: #1e1e1e; --text: #e0e0e0; }
-        body { background-color: var(--bg); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 15px; color: var(--text); transition: 0.3s; }
-        .container { max-width: 500px; margin: auto; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .btn-mode { background: var(--card-bg); border: 1px solid #ccc; padding: 8px 15px; border-radius: 20px; cursor: pointer; color: var(--text); font-size: 12px; }
-        .info-box { background: #fff9c4; color: #333; padding: 15px; border-radius: 12px; margin-bottom: 20px; border-left: 5px solid #fbc02d; display: none; font-size: 14px; }
-        body.dark-mode .info-box { background: #332b00; color: #fff9c4; }
-        .search-area { background: var(--card-bg); padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        input { width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 10px; font-size: 18px; text-align: center; background: var(--card-bg); color: var(--text); box-sizing: border-box; outline: none; }
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 15px; }
-        .card { background: var(--card-bg); padding: 10px 5px; border-radius: 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 2px solid transparent; }
-        .lunas { border-color: var(--primary); background: #ebfaef; color: var(--primary); }
-        .belum { border-color: var(--danger); background: #fdf2f2; color: var(--danger); }
-        .kas-info, .rekap-box { background: var(--card-bg); padding: 20px; border-radius: 15px; margin-top: 25px; border: 1px solid #ddd; }
-        .rekap-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
-        .rekap-table td { padding: 10px; border-bottom: 1px solid #eee; }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <div class="header">
-        <strong>🏡 Plalangan Digital 2026</strong>
-        <button class="btn-mode" onclick="gantiMode()" id="txtM">🌙 Mode Gelap</button>
-    </div>
-
-    <div id="pBox" class="info-box">
-        <strong>📢 PENGUMUMAN:</strong> <br><span id="pIsi"></span>
-    </div>
-
-    <div class="search-area">
-        <input type="text" id="inNama" placeholder="Ketik Nama Anda..." onkeyup="cariData()">
-    </div>
-
-    <div id="resHead" style="display:none; text-align:center; margin-bottom:15px; padding:15px; background:var(--card-bg); border-radius:12px; border-bottom:4px solid var(--primary);">
-        <small>DATA PEMBAYARAN:</small>
-        <h3 id="resNama" style="margin:5px 0 0 0"></h3>
-    </div>
-
-    <div id="gridBulan" class="grid"></div>
-
-    <div class="kas-info">
-        <small>Total Kas (Termasuk Saldo Bulan Lalu)</small>
-        <h2 id="totalKas" style="color:var(--primary); font-size:28px; margin:5px 0;">Rp 0</h2>
-        <div id="listKeluar" style="font-size: 13px; margin: 10px 0; border-top: 1px dashed #ccc; padding-top: 10px;"></div>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding: 10px; background: #e8f4fd; border-radius: 8px; color: #2980b9;">
-            <b>SISA SALDO:</b>
-            <span id="sisaKas" style="font-size: 18px; font-weight: bold;">Rp 0</span>
-        </div>
-    </div>
-
-    <div class="rekap-box">
-        <small style="font-weight: bold; color: var(--primary);">REKAP PENDAPATAN BULANAN:</small>
-        <table class="rekap-table"><tbody id="listRekapBulan"></tbody></table>
-    </div>
-</div>
-
 <script>
-    // Link CSV dari "Publish to Web" Google Sheets
     const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSqOacaVgTEVIQdIOgsacKIqQtqfTqUH5F_UMoI5R6ci5fxg2Px6BHrdlfntfdR7Md7T3TshmUHtG7V/pub?gid=0&single=true&output=csv';
 
     async function init() {
@@ -72,38 +6,43 @@
             const response = await fetch(csvUrl + '&nocache=' + new Date().getTime());
             const data = await response.text();
             
-            // Parsing CSV sederhana tapi kuat
-            const rows = data.split(/\r?\n/).map(row => {
+            // Parsing baris dan buang baris yang benar-benar kosong
+            const allRows = data.split(/\r?\n/).map(row => {
                 return row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(cell => cell.replace(/^"|"$/g, '').trim());
             });
-            window.db = rows;
+            
+            // Simpan ke window.db hanya baris yang punya data
+            window.db = allRows.filter(r => r.join('').length > 0);
 
-            // 1. Ambil Pengumuman (Kolom E / Indeks 4)
-            if (rows[1] && rows[1][4]) {
+            if (window.db.length < 2) return;
+
+            // 1. Ambil Pengumuman (Kolom E / Indeks 4) dari baris manapun yang ada isinya
+            const barisInfo = window.db.find(r => r[4] && r[4] !== "");
+            if (barisInfo) {
                 document.getElementById('pBox').style.display = 'block';
-                document.getElementById('pIsi').innerText = rows[1][4];
+                document.getElementById('pIsi').innerText = barisInfo[4];
             }
 
             // 2. Ambil Saldo Awal (Kolom H / Indeks 7)
-            let saldoLalu = (rows[1] && rows[1][7]) ? parseInt(rows[1][7].replace(/[^0-9]/g, '')) || 0 : 0;
+            const barisSaldo = window.db.find(r => r[7] && r[7] !== "");
+            let saldoLalu = barisSaldo ? parseInt(barisSaldo[7].replace(/[^0-9]/g, '')) || 0 : 0;
 
             let totalIuran = 0;
             let totalKeluar = 0;
             let rekapBulan = {};
             let htmlKeluar = "";
 
-            for(let i=1; i < rows.length; i++) {
-                let r = rows[i];
-                if(!r || r.length < 2) continue;
+            for(let i=1; i < window.db.length; i++) {
+                let r = window.db[i];
 
-                // Hitung Iuran (Kolom D / Indeks 3)
-                if(r[3]) {
+                // Hitung Iuran (Cek Kolom B Nama & Kolom D Nominal)
+                if(r[1] && r[3]) {
                     let nominal = parseInt(r[3].replace(/[^0-9]/g, '')) || 0;
                     totalIuran += nominal;
                     if(r[2]) rekapBulan[r[2]] = (rekapBulan[r[2]] || 0) + nominal;
                 }
 
-                // Hitung Pengeluaran (Kolom F & G / Indeks 5 & 6)
+                // Hitung Pengeluaran (Kolom F & G)
                 if(r[5] && r[6]) {
                     let nominalKeluar = parseInt(r[6].replace(/[^0-9]/g, '')) || 0;
                     totalKeluar += nominalKeluar;
@@ -111,12 +50,11 @@
                 }
             }
 
-            // Update UI Kas
+            // Tampilkan ke layar
             document.getElementById('totalKas').innerText = "Rp " + (saldoLalu + totalIuran).toLocaleString('id-ID');
             document.getElementById('sisaKas').innerText = "Rp " + (saldoLalu + totalIuran - totalKeluar).toLocaleString('id-ID');
             document.getElementById('listKeluar').innerHTML = htmlKeluar || "Tidak ada catatan pengeluaran.";
 
-            // Update Tabel Rekap
             let htmlRekap = "";
             const bulanFull = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
             bulanFull.forEach(b => {
@@ -124,11 +62,10 @@
                     htmlRekap += `<tr><td>${b}</td><td style="text-align:right; font-weight:bold; color:var(--primary)">Rp ${rekapBulan[b].toLocaleString('id-ID')}</td></tr>`;
                 }
             });
-            document.getElementById('listRekapBulan').innerHTML = htmlRekap || "<tr><td>Belum ada data.</td></tr>";
+            document.getElementById('listRekapBulan').innerHTML = htmlRekap || "<tr><td>Belum ada data iuran.</td></tr>";
 
         } catch (error) {
             console.error("Gagal Memuat:", error);
-            alert("Gagal memuat data. Periksa koneksi atau link CSV!");
         }
     }
 
@@ -139,6 +76,7 @@
 
         if(keyword.length < 3) { grid.innerHTML = ""; resHead.style.display = "none"; return; }
 
+        // Filter hanya baris yang ada namanya (Kolom B)
         let matches = window.db.filter(row => row[1] && row[1].toLowerCase().includes(keyword));
 
         if(matches.length > 0) {
@@ -156,6 +94,8 @@
                 box.innerHTML = `<small>${bulanSingkat[idx]}</small><br>${dataBayar ? '✅' : '❌'}<br><small>${dataBayar ? 'LUNAS' : 'BELUM'}</small>`;
                 grid.appendChild(box);
             });
+        } else {
+            grid.innerHTML = "<p style='grid-column: span 4; text-align: center; font-size: 12px; color: var(--danger);'>Nama tidak ditemukan</p>";
         }
     }
 
@@ -166,5 +106,3 @@
 
     window.onload = init;
 </script>
-</body>
-</html>
