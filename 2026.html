@@ -4,139 +4,197 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal Iuran Plalangan</title>
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/1160/1160329.png">
     <style>
-        :root { --primary: #27ae60; --danger: #e74c3c; --bg: #f4f7f6; --card: #ffffff; --text: #2c3e50; }
-        body { background-color: var(--bg); font-family: sans-serif; margin: 0; padding: 15px; color: var(--text); }
+        :root { --primary: #27ae60; --danger: #e74c3c; --bg: #f4f7f6; --card-bg: #ffffff; --text: #2c3e50; }
+        body.dark-mode { --bg: #121212; --card-bg: #1e1e1e; --text: #e0e0e0; }
+        body { background-color: var(--bg); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 15px; color: var(--text); transition: 0.3s; }
         .container { max-width: 500px; margin: auto; }
-        .info-box { background: #fff9c4; padding: 15px; border-radius: 12px; margin-bottom: 20px; border-left: 5px solid #fbc02d; display: none; font-size: 14px; }
-        .search-area { background: var(--card); padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        input { width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 10px; font-size: 18px; text-align: center; box-sizing: border-box; }
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 15px; }
-        .card { background: var(--card); padding: 10px 5px; border-radius: 10px; text-align: center; border: 2px solid #ddd; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .btn-mode { background: var(--card-bg); border: 1px solid #ccc; padding: 8px 15px; border-radius: 20px; cursor: pointer; color: var(--text); font-size: 12px; }
+        .info-box { background: #fff9c4; color: #333; padding: 15px; border-radius: 12px; margin-bottom: 20px; border-left: 5px solid #fbc02d; display: none; font-size: 14px; }
+        body.dark-mode .info-box { background: #332b00; color: #fff9c4; }
+        .search-area { background: var(--card-bg); padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        input { width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 10px; font-size: 18px; text-align: center; background: var(--card-bg); color: var(--text); box-sizing: border-box; outline: none; }
+        .result-head { text-align: center; margin-bottom: 15px; display: none; padding: 15px; background: var(--card-bg); border-radius: 12px; border-bottom: 4px solid var(--primary); }
+        
+        /* Grid 4 Kolom (3 Baris) */
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .card { background: var(--card-bg); padding: 8px 5px; border-radius: 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 2px solid transparent; }
+        
         .lunas { border-color: var(--primary); background: #ebfaef; color: var(--primary); }
+        body.dark-mode .lunas { background: #0a2e17; }
         .belum { border-color: var(--danger); background: #fdf2f2; color: var(--danger); }
-        .box-data { background: var(--card); padding: 20px; border-radius: 15px; margin-top: 20px; border: 1px solid #ddd; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
-        td { padding: 8px; border-bottom: 1px solid #eee; }
+        body.dark-mode .belum { background: #3a1111; }
+        .tgl { font-size: 7px; display: block; margin-top: 3px; font-style: italic; opacity: 0.8; }
+        
+        .kas-info { background: var(--card-bg); padding: 20px; border-radius: 15px; margin-top: 25px; text-align: center; border: 1px solid #ddd; }
+        .kas-info h2 { margin: 5px 0; color: var(--primary); font-size: 28px; }
+        .detail-pengeluaran { text-align: left; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #ccc; }
+        .sisa-box { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding: 10px; background: #e8f4fd; border-radius: 8px; color: #2980b9; }
+        body.dark-mode .sisa-box { background: #1a2a3a; color: #3498db; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h3 style="text-align:center">🏡 Monitoring Iuran Plalangan</h3>
+    <div class="header">
+        <strong>🏡 Plalangan Digital</strong>
+        <button class="btn-mode" onclick="gantiMode()" id="txtM">🌙 Mode Gelap</button>
+    </div>
 
     <div id="pBox" class="info-box">
-        <strong>📢 INFO:</strong> <br><span id="pIsi"></span>
+        <strong>📢 PENGUMUMAN:</strong> <br><span id="pIsi"></span>
     </div>
 
     <div class="search-area">
-        <input type="text" id="inNama" placeholder="Ketik Nama..." onkeyup="cariData()">
+        <input type="text" id="inNama" placeholder="Ketik Nama" onkeyup="cariData()">
     </div>
 
-    <div id="resHead" style="display:none; text-align:center; margin-bottom:15px;">
-        <h4 id="resNama" style="margin:0; color:var(--primary)"></h4>
+    <div id="resHead" class="result-head">
+        <small>DATA PEMBAYARAN:</small>
+        <h3 id="resNama" style="margin:5px 0 0 0"></h3>
     </div>
 
     <div id="gridBulan" class="grid"></div>
 
-    <div class="box-data">
-        <small>Sisa Saldo Kas:</small>
-        <h2 id="sisaKas" style="color:var(--primary); margin:5px 0;">Rp 0</h2>
-        <div id="listKeluar" style="font-size: 11px; color: #666; margin-top:10px;"></div>
-    </div>
+    <div class="kas-info">
+        <small>Total Kas (Termasuk Saldo Bulan Lalu)</small>
+        <h2 id="totalKas">Rp 0</h2>
 
-    <div class="box-data">
-        <strong>Rekap Iuran Masuk:</strong>
-        <table id="listRekapBulan"></table>
+        <div class="detail-pengeluaran">
+            <small style="font-weight: bold; color: var(--danger);">RINCIAN KEUANGAN:</small>
+            <div id="listKeluar" style="font-size: 13px; margin: 8px 0; line-height: 1.6;">Memuat data...</div>
+            
+            <div class="sisa-box">
+                <span style="font-weight: bold;">SISA SALDO:</span>
+                <span id="sisaKas" style="font-size: 18px; font-weight: bold;">Rp 0</span>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
-    // Link CSV Anda
-    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSqOacaVgTEVIQdIOgsacKIqQtqfTqUH5F_UMoI5R6ci5fxg2Px6BHrdlfntfdR7Md7T3TshmUHtG7V/pub?gid=0&single=true&output=csv';
+    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSqOacaVgTEVIQdIOgsacKIqQtqfTqUH5F_UMoI5R6ci5fxg2Px6BHrdlfntfdR7Md7Z3TshmUHtG7V/pub?gid=0&single=true&output=csv';
+
+    function cekModeTersimpan() {
+        const statusMode = localStorage.getItem('darkMode');
+        if (statusMode === 'aktif') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('txtM').innerText = "☀️ Mode Terang";
+        }
+    }
+
+    function gantiMode() {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        if (isDark) {
+            localStorage.setItem('darkMode', 'aktif');
+            document.getElementById('txtM').innerText = "☀️ Mode Terang";
+        } else {
+            localStorage.setItem('darkMode', 'nonaktif');
+            document.getElementById('txtM').innerText = "🌙 Mode Gelap";
+        }
+    }
+
+    function parseCSV(text) {
+        const regex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/;
+        return text.split(/\r?\n/).map(line => line.split(regex).map(cell => cell.replace(/^"|"$/g, '').trim()));
+    }
 
     async function init() {
+        cekModeTersimpan();
         try {
-            const resp = await fetch(csvUrl + '&cache=' + new Date().getTime());
-            const text = await resp.text();
-            
-            // Konversi teks CSV ke Array
-            const rows = text.split("\n").map(r => r.split(",").map(c => c.trim().replace(/"/g, '')));
-            window.db = rows;
+            const resp = await fetch(csvUrl + '&v=' + new Date().getTime());
+            const rawData = await resp.text();
+            window.db = parseCSV(rawData);
 
-            // 1. Ambil Pengumuman (Kolom E / Indeks 4)
-            const infoRow = rows.find((r, idx) => idx > 0 && r[4] && r[4] !== "");
-            if(infoRow) {
+            if (window.db[1] && window.db[1][4]) {
                 document.getElementById('pBox').style.display = 'block';
-                document.getElementById('pIsi').innerText = infoRow[4];
+                document.getElementById('pIsi').innerText = window.db[1][4];
             }
 
-            // 2. Hitung Keuangan
-            let saldoLalu = 0;
-            const saldoRow = rows.find((r, idx) => idx > 0 && r[7] && !isNaN(r[7].replace(/[^0-9]/g, '')));
-            if(saldoRow) saldoLalu = parseInt(saldoRow[7].replace(/[^0-9]/g, '')) || 0;
+            let saldoAwal = 0;
+            if (window.db[1] && window.db[1][7]) {
+                saldoAwal = parseInt(window.db[1][7].replace(/[^0-9]/g, '')) || 0;
+            }
 
-            let totalIuran = 0, totalKeluar = 0, rekapBulan = {}, listK = "";
-
-            rows.forEach((r, idx) => {
-                if(idx === 0) return;
-
-                // Hitung Iuran (Kolom D / Indeks 3)
-                if(r[3]) {
-                    let n = parseInt(r[3].replace(/[^0-9]/g, '')) || 0;
-                    totalIuran += n;
-                    if(r[2]) rekapBulan[r[2]] = (rekapBulan[r[2]] || 0) + n;
+            let iuranBaru = 0;
+            for(let i=1; i < window.db.length; i++) {
+                if(window.db[i][3]) {
+                    let nom = parseInt(window.db[i][3].replace(/[^0-9]/g, '')) || 0;
+                    iuranBaru += nom;
                 }
+            }
 
-                // Hitung Keluar (Kolom G / Indeks 6)
-                if(r[6]) {
-                    let nk = parseInt(r[6].replace(/[^0-9]/g, '')) || 0;
-                    totalKeluar += nk;
-                    listK += `• ${r[5] || 'Pengeluaran'} (Rp ${nk.toLocaleString()})<br>`;
+            let totalKotor = saldoAwal + iuranBaru;
+            document.getElementById('totalKas').innerText = "Rp " + totalKotor.toLocaleString('id-ID');
+
+            let rincianHTML = "";
+            let totalKeluar = 0;
+
+            if (saldoAwal > 0) {
+                rincianHTML += `• Saldo Bulan Lalu: <span style="color:var(--primary)">Rp ${saldoAwal.toLocaleString('id-ID')}</span><br>`;
+            }
+
+            for (let i = 1; i < window.db.length; i++) {
+                let teksKeluar = window.db[i][5];
+                let angkaKeluar = window.db[i][6];
+                if (teksKeluar && teksKeluar.trim() !== "") {
+                    let nomKeluar = parseInt(angkaKeluar.replace(/[^0-9]/g, '')) || 0;
+                    totalKeluar += nomKeluar;
+                    rincianHTML += `• ${teksKeluar} (<span style="color:var(--danger)">-Rp ${nomKeluar.toLocaleString('id-ID')}</span>)<br>`;
                 }
-            });
+            }
 
-            // Tampilkan Keuangan
-            document.getElementById('sisaKas').innerText = "Rp " + (saldoLalu + totalIuran - totalKeluar).toLocaleString('id-ID');
-            document.getElementById('listKeluar').innerHTML = listK || "Belum ada pengeluaran.";
+            document.getElementById('listKeluar').innerHTML = rincianHTML || "Belum ada catatan keuangan.";
+            let sisaSaldo = totalKotor - totalKeluar;
+            document.getElementById('sisaKas').innerText = "Rp " + sisaSaldo.toLocaleString('id-ID');
 
-            // Tampilkan Rekap Tabel
-            let htmlRekap = "";
-            ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"].forEach(b => {
-                if(rekapBulan[b]) htmlRekap += `<tr><td>${b}</td><td style="text-align:right">Rp ${rekapBulan[b].toLocaleString()}</td></tr>`;
-            });
-            document.getElementById('listRekapBulan').innerHTML = htmlRekap;
-
-        } catch (e) {
-            console.error("Error muat data:", e);
-            document.body.innerHTML = "<div style='padding:50px; text-align:center;'>Gagal memuat data. Periksa koneksi internet Anda.</div>";
-        }
+        } catch (err) { console.error("Gagal memuat"); }
     }
 
     function cariData() {
-        let q = document.getElementById('inNama').value.toLowerCase().trim();
-        let grid = document.getElementById('gridBulan');
-        let head = document.getElementById('resHead');
-        
-        if(q.length < 2) { grid.innerHTML = ""; head.style.display="none"; return; }
-
-        let matches = window.db.filter(r => r[1] && r[1].toLowerCase().includes(q));
-        
-        if(matches.length > 0) {
+        const query = document.getElementById('inNama').value.toLowerCase().trim();
+        const grid = document.getElementById('gridBulan');
+        const head = document.getElementById('resHead');
+        if (query.length < 3) { grid.innerHTML = ""; head.style.display = "none"; return; }
+        let matches = [];
+        let displayNama = "";
+        window.db.forEach((row, idx) => {
+            if (idx === 0) return;
+            if (row[1] && row[1].toLowerCase().includes(query)) {
+                matches.push({ bulan: row[2], tanggal: row[0] });
+                displayNama = row[1].toUpperCase(); 
+            }
+        });
+        if (matches.length > 0) {
             head.style.display = "block";
-            document.getElementById('resNama').innerText = "Nama: " + matches[0][1].toUpperCase();
+            document.getElementById('resNama').innerText = displayNama;
+            
+            // Nama bulan disingkat agar pas di kotak kecil
+            const bulanArr = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
+            const bulanFull = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            
             grid.innerHTML = "";
-            ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"].forEach(b => {
-                let ada = matches.find(m => m[2] === b);
-                let div = document.createElement('div');
-                div.className = `card ${ada ? 'lunas' : 'belum'}`;
-                div.innerHTML = `<small style="font-size:9px">${b.substring(0,3)}</small><br>${ada ? '✅' : '❌'}`;
+            bulanArr.forEach((b, index) => {
+                const bayar = matches.find(m => m.bulan && m.bulan.toLowerCase() === bulanFull[index].toLowerCase());
+                const div = document.createElement('div');
+                div.className = `card ${bayar ? 'lunas' : 'belum'}`;
+                div.innerHTML = `
+                    <div style="font-size:10px; font-weight:bold">${b}</div>
+                    <div style="font-size:18px; margin:3px 0">${bayar ? '✅' : '❌'}</div>
+                    <div style="font-size:8px; font-weight:bold">${bayar ? 'LUNAS' : 'BELUM'}</div>
+                    ${bayar ? `<span class="tgl">${bayar.tanggal}</span>` : ''}
+                `;
                 grid.appendChild(div);
             });
+        } else {
+            grid.innerHTML = "<p style='grid-column: span 4; text-align: center; color: var(--danger); font-size:12px;'>Nama tidak ditemukan</p>";
+            head.style.display = "none";
         }
     }
-
-    window.onload = init;
+    init();
 </script>
 </body>
 </html>
