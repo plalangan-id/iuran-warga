@@ -1,161 +1,170 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Iuran 2026</title>
+    <style>
+        :root { --primary: #27ae60; --danger: #e74c3c; --bg: #f4f7f6; --card-bg: #ffffff; --text: #2c3e50; }
+        body.dark-mode { --bg: #121212; --card-bg: #1e1e1e; --text: #e0e0e0; }
+        body { background-color: var(--bg); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 15px; color: var(--text); transition: 0.3s; }
+        .container { max-width: 500px; margin: auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .btn-mode { background: var(--card-bg); border: 1px solid #ccc; padding: 8px 15px; border-radius: 20px; cursor: pointer; color: var(--text); font-size: 12px; }
+        .info-box { background: #fff9c4; color: #333; padding: 15px; border-radius: 12px; margin-bottom: 20px; border-left: 5px solid #fbc02d; display: none; font-size: 14px; }
+        body.dark-mode .info-box { background: #332b00; color: #fff9c4; }
+        .search-area { background: var(--card-bg); padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        input { width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 10px; font-size: 18px; text-align: center; background: var(--card-bg); color: var(--text); box-sizing: border-box; outline: none; }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 15px; }
+        .card { background: var(--card-bg); padding: 10px 5px; border-radius: 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 2px solid transparent; }
+        .lunas { border-color: var(--primary); background: #ebfaef; color: var(--primary); }
+        .belum { border-color: var(--danger); background: #fdf2f2; color: var(--danger); }
+        .kas-info, .rekap-box { background: var(--card-bg); padding: 20px; border-radius: 15px; margin-top: 25px; border: 1px solid #ddd; }
+        .rekap-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+        .rekap-table td { padding: 10px; border-bottom: 1px solid #eee; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <strong>🏡 Plalangan Digital 2026</strong>
+        <button class="btn-mode" onclick="gantiMode()" id="txtM">🌙 Mode Gelap</button>
+    </div>
+
+    <div id="pBox" class="info-box">
+        <strong>📢 PENGUMUMAN:</strong> <br><span id="pIsi"></span>
+    </div>
+
+    <div class="search-area">
+        <input type="text" id="inNama" placeholder="Ketik Nama Anda..." onkeyup="cariData()">
+    </div>
+
+    <div id="resHead" style="display:none; text-align:center; margin-bottom:15px; padding:15px; background:var(--card-bg); border-radius:12px; border-bottom:4px solid var(--primary);">
+        <small>DATA PEMBAYARAN:</small>
+        <h3 id="resNama" style="margin:5px 0 0 0"></h3>
+    </div>
+
+    <div id="gridBulan" class="grid"></div>
+
+    <div class="kas-info">
+        <small>Total Kas (Termasuk Saldo Bulan Lalu)</small>
+        <h2 id="totalKas" style="color:var(--primary); font-size:28px; margin:5px 0;">Rp 0</h2>
+        <div id="listKeluar" style="font-size: 13px; margin: 10px 0; border-top: 1px dashed #ccc; padding-top: 10px;"></div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding: 10px; background: #e8f4fd; border-radius: 8px; color: #2980b9;">
+            <b>SISA SALDO:</b>
+            <span id="sisaKas" style="font-size: 18px; font-weight: bold;">Rp 0</span>
+        </div>
+    </div>
+
+    <div class="rekap-box">
+        <small style="font-weight: bold; color: var(--primary);">REKAP PENDAPATAN BULANAN:</small>
+        <table class="rekap-table"><tbody id="listRekapBulan"></tbody></table>
+    </div>
+</div>
+
 <script>
-    // URL CSV Anda
+    // Link CSV dari "Publish to Web" Google Sheets
     const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSqOacaVgTEVIQdIOgsacKIqQtqfTqUH5F_UMoI5R6ci5fxg2Px6BHrdlfntfdR7Md7T3TshmUHtG7V/pub?gid=0&single=true&output=csv';
 
-    function cekModeTersimpan() {
-        const statusMode = localStorage.getItem('darkMode');
-        if (statusMode === 'aktif') {
-            document.body.classList.add('dark-mode');
-            if(document.getElementById('txtM')) document.getElementById('txtM').innerText = "☀️ Mode Terang";
+    async function init() {
+        try {
+            const response = await fetch(csvUrl + '&nocache=' + new Date().getTime());
+            const data = await response.text();
+            
+            // Parsing CSV sederhana tapi kuat
+            const rows = data.split(/\r?\n/).map(row => {
+                return row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(cell => cell.replace(/^"|"$/g, '').trim());
+            });
+            window.db = rows;
+
+            // 1. Ambil Pengumuman (Kolom E / Indeks 4)
+            if (rows[1] && rows[1][4]) {
+                document.getElementById('pBox').style.display = 'block';
+                document.getElementById('pIsi').innerText = rows[1][4];
+            }
+
+            // 2. Ambil Saldo Awal (Kolom H / Indeks 7)
+            let saldoLalu = (rows[1] && rows[1][7]) ? parseInt(rows[1][7].replace(/[^0-9]/g, '')) || 0 : 0;
+
+            let totalIuran = 0;
+            let totalKeluar = 0;
+            let rekapBulan = {};
+            let htmlKeluar = "";
+
+            for(let i=1; i < rows.length; i++) {
+                let r = rows[i];
+                if(!r || r.length < 2) continue;
+
+                // Hitung Iuran (Kolom D / Indeks 3)
+                if(r[3]) {
+                    let nominal = parseInt(r[3].replace(/[^0-9]/g, '')) || 0;
+                    totalIuran += nominal;
+                    if(r[2]) rekapBulan[r[2]] = (rekapBulan[r[2]] || 0) + nominal;
+                }
+
+                // Hitung Pengeluaran (Kolom F & G / Indeks 5 & 6)
+                if(r[5] && r[6]) {
+                    let nominalKeluar = parseInt(r[6].replace(/[^0-9]/g, '')) || 0;
+                    totalKeluar += nominalKeluar;
+                    htmlKeluar += `• ${r[5]} (<span style="color:var(--danger)">-Rp ${nominalKeluar.toLocaleString('id-ID')}</span>)<br>`;
+                }
+            }
+
+            // Update UI Kas
+            document.getElementById('totalKas').innerText = "Rp " + (saldoLalu + totalIuran).toLocaleString('id-ID');
+            document.getElementById('sisaKas').innerText = "Rp " + (saldoLalu + totalIuran - totalKeluar).toLocaleString('id-ID');
+            document.getElementById('listKeluar').innerHTML = htmlKeluar || "Tidak ada catatan pengeluaran.";
+
+            // Update Tabel Rekap
+            let htmlRekap = "";
+            const bulanFull = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+            bulanFull.forEach(b => {
+                if(rekapBulan[b]) {
+                    htmlRekap += `<tr><td>${b}</td><td style="text-align:right; font-weight:bold; color:var(--primary)">Rp ${rekapBulan[b].toLocaleString('id-ID')}</td></tr>`;
+                }
+            });
+            document.getElementById('listRekapBulan').innerHTML = htmlRekap || "<tr><td>Belum ada data.</td></tr>";
+
+        } catch (error) {
+            console.error("Gagal Memuat:", error);
+            alert("Gagal memuat data. Periksa koneksi atau link CSV!");
+        }
+    }
+
+    function cariData() {
+        let keyword = document.getElementById('inNama').value.toLowerCase().trim();
+        let grid = document.getElementById('gridBulan');
+        let resHead = document.getElementById('resHead');
+
+        if(keyword.length < 3) { grid.innerHTML = ""; resHead.style.display = "none"; return; }
+
+        let matches = window.db.filter(row => row[1] && row[1].toLowerCase().includes(keyword));
+
+        if(matches.length > 0) {
+            resHead.style.display = "block";
+            document.getElementById('resNama').innerText = matches[0][1].toUpperCase();
+            grid.innerHTML = "";
+            
+            const bulanFull = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+            const bulanSingkat = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agt","Sep","Okt","Nov","Des"];
+
+            bulanFull.forEach((b, idx) => {
+                let dataBayar = matches.find(m => m[2] === b);
+                let box = document.createElement('div');
+                box.className = `card ${dataBayar ? 'lunas' : 'belum'}`;
+                box.innerHTML = `<small>${bulanSingkat[idx]}</small><br>${dataBayar ? '✅' : '❌'}<br><small>${dataBayar ? 'LUNAS' : 'BELUM'}</small>`;
+                grid.appendChild(box);
+            });
         }
     }
 
     function gantiMode() {
         document.body.classList.toggle('dark-mode');
-        const isDark = document.body.classList.contains('dark-mode');
-        localStorage.setItem('darkMode', isDark ? 'aktif' : 'nonaktif');
-        if(document.getElementById('txtM')) document.getElementById('txtM').innerText = isDark ? "☀️ Mode Terang" : "🌙 Mode Gelap";
+        document.getElementById('txtM').innerText = document.body.classList.contains('dark-mode') ? "☀️ Mode Terang" : "🌙 Mode Gelap";
     }
 
-    function parseCSV(text) {
-        if(!text) return [];
-        const regex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/;
-        return text.split(/\r?\n/).map(line => line.split(regex).map(cell => cell.replace(/^"|"$/g, '').trim()));
-    }
-
-    async function init() {
-        cekModeTersimpan();
-        try {
-            const resp = await fetch(csvUrl + '&v=' + new Date().getTime());
-            const rawData = await resp.text();
-            window.db = parseCSV(rawData);
-
-            if (!window.db || window.db.length < 2) return;
-
-            // 1. PENGUMUMAN (Kolom E / Indeks 4)
-            const pengumuman = window.db[1][4];
-            if (pengumuman && pengumuman.trim() !== "") {
-                document.getElementById('pBox').style.display = 'block';
-                document.getElementById('pIsi').innerText = pengumuman;
-            }
-
-            // 2. SALDO AWAL (Kolom H / Indeks 7)
-            let saldoAwal = 0;
-            if (window.db[1] && window.db[1][7]) {
-                saldoAwal = parseInt(window.db[1][7].replace(/[^0-9]/g, '')) || 0;
-            }
-
-            let iuranBaru = 0;
-            let rekapBulanan = {};
-
-            // Loop Data (Mulai Baris 2)
-            for(let i=1; i < window.db.length; i++) {
-                let baris = window.db[i];
-                if(!baris) continue;
-
-                // Hitung Iuran Masuk (Kolom D / Indeks 3)
-                if(baris[3] && baris[3] !== "") {
-                    let nom = parseInt(baris[3].replace(/[^0-9]/g, '')) || 0;
-                    let bln = baris[2]; // Kolom C (Bulan)
-                    
-                    iuranBaru += nom;
-                    if (bln) {
-                        rekapBulanan[bln] = (rekapBulanan[bln] || 0) + nom;
-                    }
-                }
-            }
-
-            // Tampilkan Tabel Rekap
-            let rekapHTML = "";
-            const urutanBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-            urutanBulan.forEach(b => {
-                if (rekapBulanan[b]) {
-                    rekapHTML += `<tr><td>${b}</td><td>Rp ${rekapBulanan[b].toLocaleString('id-ID')}</td></tr>`;
-                }
-            });
-            document.getElementById('listRekapBulan').innerHTML = rekapHTML || "<tr><td colspan='2'>Belum ada data iuran</td></tr>";
-
-            // 3. HITUNG PENGELUARAN (Kolom G / Indeks 6)
-            let totalKotor = saldoAwal + iuranBaru;
-            document.getElementById('totalKas').innerText = "Rp " + totalKotor.toLocaleString('id-ID');
-
-            let rincianHTML = "";
-            let totalKeluar = 0;
-
-            if (saldoAwal > 0) {
-                rincianHTML += `• Saldo Bulan Lalu: <span style="color:var(--primary)">Rp ${saldoAwal.toLocaleString('id-ID')}</span><br>`;
-            }
-
-            for (let i = 1; i < window.db.length; i++) {
-                let baris = window.db[i];
-                let teksKeluar = baris[5]; // Kolom F (Keterangan)
-                let angkaKeluar = baris[6]; // Kolom G (Nominal Keluar)
-                
-                if (teksKeluar && teksKeluar.trim() !== "" && angkaKeluar) {
-                    let nomKeluar = parseInt(angkaKeluar.replace(/[^0-9]/g, '')) || 0;
-                    totalKeluar += nomKeluar;
-                    rincianHTML += `• ${teksKeluar} (<span style="color:var(--danger)">-Rp ${nomKeluar.toLocaleString('id-ID')}</span>)<br>`;
-                }
-            }
-
-            document.getElementById('listKeluar').innerHTML = rincianHTML || "Belum ada catatan keuangan.";
-            document.getElementById('sisaKas').innerText = "Rp " + (totalKotor - totalKeluar).toLocaleString('id-ID');
-
-        } catch (err) { 
-            console.error("Error Detail:", err);
-            alert("Terjadi kesalahan pembacaan data. Pastikan Google Sheets sudah di-Publish ke Web sebagai CSV.");
-        }
-    }
-
-    function cariData() {
-        const query = document.getElementById('inNama').value.toLowerCase().trim();
-        const grid = document.getElementById('gridBulan');
-        const head = document.getElementById('resHead');
-        
-        if (query.length < 3) { 
-            grid.innerHTML = ""; 
-            head.style.display = "none"; 
-            return; 
-        }
-        
-        let matches = [];
-        let displayNama = "";
-        
-        window.db.forEach((row, idx) => {
-            if (idx === 0 || !row[1]) return;
-            // Cari di Kolom B (Nama)
-            if (row[1].toLowerCase().includes(query)) {
-                matches.push({ bulan: row[2], tanggal: row[0] });
-                displayNama = row[1].toUpperCase(); 
-            }
-        });
-
-        if (matches.length > 0) {
-            head.style.display = "block";
-            document.getElementById('resNama').innerText = displayNama;
-            
-            const bulanArr = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
-            const bulanFull = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-            
-            grid.innerHTML = "";
-            bulanFull.forEach((blnFull, index) => {
-                const bayar = matches.find(m => m.bulan && m.bulan.toLowerCase() === blnFull.toLowerCase());
-                const div = document.createElement('div');
-                div.className = `card ${bayar ? 'lunas' : 'belum'}`;
-                div.innerHTML = `
-                    <div style="font-size:10px; font-weight:bold">${bulanArr[index]}</div>
-                    <div style="font-size:18px; margin:3px 0">${bayar ? '✅' : '❌'}</div>
-                    <div style="font-size:8px; font-weight:bold">${bayar ? 'LUNAS' : 'BELUM'}</div>
-                    ${bayar ? `<span class="tgl">${bayar.tanggal}</span>` : ''}
-                `;
-                grid.appendChild(div);
-            });
-        } else {
-            grid.innerHTML = "<p style='grid-column: span 4; text-align: center; color: var(--danger); font-size:12px;'>Nama tidak ditemukan</p>";
-            head.style.display = "none";
-        }
-    }
-    
-    // Jalankan aplikasi
     window.onload = init;
 </script>
+</body>
+</html>
