@@ -18,7 +18,7 @@
         input { width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 10px; font-size: 18px; text-align: center; background: var(--card-bg); color: var(--text); box-sizing: border-box; outline: none; }
         .result-head { text-align: center; margin-bottom: 15px; display: none; padding: 15px; background: var(--card-bg); border-radius: 12px; border-bottom: 4px solid var(--primary); }
         
-        /* Grid 4 Kolom (3 Baris) */
+        /* Grid 4 Kolom */
         .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
         .card { background: var(--card-bg); padding: 8px 5px; border-radius: 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 2px solid transparent; }
         
@@ -33,6 +33,12 @@
         .detail-pengeluaran { text-align: left; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #ccc; }
         .sisa-box { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding: 10px; background: #e8f4fd; border-radius: 8px; color: #2980b9; }
         body.dark-mode .sisa-box { background: #1a2a3a; color: #3498db; }
+
+        /* Style Rekap Bulanan */
+        .rekap-box { margin-top: 20px; background: var(--card-bg); border-radius: 15px; padding: 15px; border: 1px solid #ddd; }
+        .rekap-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+        .rekap-table th, .rekap-table td { padding: 10px; border-bottom: 1px solid #eee; text-align: left; color: var(--text); }
+        .rekap-table td:last-child { text-align: right; font-weight: bold; color: var(--primary); }
     </style>
 </head>
 <body>
@@ -72,10 +78,25 @@
             </div>
         </div>
     </div>
+
+    <div class="rekap-box">
+        <small style="font-weight: bold; color: var(--primary);">REKAP PENDAPATAN BULANAN:</small>
+        <table class="rekap-table">
+            <thead>
+                <tr>
+                    <th>Bulan</th>
+                    <th>Total Masuk</th>
+                </tr>
+            </thead>
+            <tbody id="listRekapBulan">
+                <tr><td colspan="2">Memuat rekap...</td></tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <script>
-    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSqOacaVgTEVIQdIOgsacKIqQtqfTqUH5F_UMoI5R6ci5fxg2Px6BHrdlfntfdR7Md7Z3TshmUHtG7V/pub?gid=0&single=true&output=csv';
+    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSqOacaVgTEVIQdIOgsacKIqQtqfTqUH5F_UMoI5R6ci5fxg2Px6BHrdlfntfdR7Md7T3TshmUHtG7V/pub?gid=0&single=true&output=csv';
 
     function cekModeTersimpan() {
         const statusMode = localStorage.getItem('darkMode');
@@ -120,12 +141,35 @@
             }
 
             let iuranBaru = 0;
+            let rekapBulanan = {};
+
             for(let i=1; i < window.db.length; i++) {
                 if(window.db[i][3]) {
                     let nom = parseInt(window.db[i][3].replace(/[^0-9]/g, '')) || 0;
+                    let bln = window.db[i][2];
+                    
                     iuranBaru += nom;
+
+                    // Hitung per bulan
+                    if (bln && bln.trim() !== "") {
+                        rekapBulanan[bln] = (rekapBulanan[bln] || 0) + nom;
+                    }
                 }
             }
+
+            // Tampilkan Rekap Bulanan
+            let rekapHTML = "";
+            const urutanBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            
+            urutanBulan.forEach(b => {
+                if (rekapBulanan[b]) {
+                    rekapHTML += `<tr>
+                        <td>${b}</td>
+                        <td>Rp ${rekapBulanan[b].toLocaleString('id-ID')}</td>
+                    </tr>`;
+                }
+            });
+            document.getElementById('listRekapBulan').innerHTML = rekapHTML || "<tr><td colspan='2'>Belum ada data iuran</td></tr>";
 
             let totalKotor = saldoAwal + iuranBaru;
             document.getElementById('totalKas').innerText = "Rp " + totalKotor.toLocaleString('id-ID');
@@ -172,7 +216,6 @@
             head.style.display = "block";
             document.getElementById('resNama').innerText = displayNama;
             
-            // Nama bulan disingkat agar pas di kotak kecil
             const bulanArr = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
             const bulanFull = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
             
