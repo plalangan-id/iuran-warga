@@ -1,100 +1,3 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal Iuran Plalangan</title>
-    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/1160/1160329.png">
-    <style>
-        :root { --primary: #27ae60; --danger: #e74c3c; --bg: #f4f7f6; --card-bg: #ffffff; --text: #2c3e50; }
-        body.dark-mode { --bg: #121212; --card-bg: #1e1e1e; --text: #e0e0e0; }
-        body { background-color: var(--bg); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 15px; color: var(--text); transition: 0.3s; }
-        .container { max-width: 500px; margin: auto; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .btn-mode { background: var(--card-bg); border: 1px solid #ccc; padding: 8px 15px; border-radius: 20px; cursor: pointer; color: var(--text); font-size: 12px; }
-        .info-box { background: #fff9c4; color: #333; padding: 15px; border-radius: 12px; margin-bottom: 20px; border-left: 5px solid #fbc02d; display: none; font-size: 14px; }
-        body.dark-mode .info-box { background: #332b00; color: #fff9c4; }
-        .search-area { background: var(--card-bg); padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        input { width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 10px; font-size: 18px; text-align: center; background: var(--card-bg); color: var(--text); box-sizing: border-box; outline: none; }
-        .result-head { text-align: center; margin-bottom: 15px; display: none; padding: 15px; background: var(--card-bg); border-radius: 12px; border-bottom: 4px solid var(--primary); }
-        
-        /* Grid 4 Kolom */
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-        .card { background: var(--card-bg); padding: 8px 5px; border-radius: 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 2px solid transparent; }
-        
-        .lunas { border-color: var(--primary); background: #ebfaef; color: var(--primary); }
-        body.dark-mode .lunas { background: #0a2e17; }
-        .belum { border-color: var(--danger); background: #fdf2f2; color: var(--danger); }
-        body.dark-mode .belum { background: #3a1111; }
-        .tgl { font-size: 7px; display: block; margin-top: 3px; font-style: italic; opacity: 0.8; }
-        
-        .kas-info { background: var(--card-bg); padding: 20px; border-radius: 15px; margin-top: 25px; text-align: center; border: 1px solid #ddd; }
-        .kas-info h2 { margin: 5px 0; color: var(--primary); font-size: 28px; }
-        .detail-pengeluaran { text-align: left; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #ccc; }
-        .sisa-box { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding: 10px; background: #e8f4fd; border-radius: 8px; color: #2980b9; }
-        body.dark-mode .sisa-box { background: #1a2a3a; color: #3498db; }
-
-        /* Style Rekap Bulanan */
-        .rekap-box { margin-top: 20px; background: var(--card-bg); border-radius: 15px; padding: 15px; border: 1px solid #ddd; }
-        .rekap-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
-        .rekap-table th, .rekap-table td { padding: 10px; border-bottom: 1px solid #eee; text-align: left; color: var(--text); }
-        .rekap-table td:last-child { text-align: right; font-weight: bold; color: var(--primary); }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <div class="header">
-        <strong>🏡 Plalangan Digital</strong>
-        <button class="btn-mode" onclick="gantiMode()" id="txtM">🌙 Mode Gelap</button>
-    </div>
-
-    <div id="pBox" class="info-box">
-        <strong>📢 PENGUMUMAN:</strong> <br><span id="pIsi"></span>
-    </div>
-
-    <div class="search-area">
-        <input type="text" id="inNama" placeholder="Ketik Nama" onkeyup="cariData()">
-    </div>
-
-    <div id="resHead" class="result-head">
-        <small>DATA PEMBAYARAN:</small>
-        <h3 id="resNama" style="margin:5px 0 0 0"></h3>
-    </div>
-
-    <div id="gridBulan" class="grid"></div>
-
-    <div class="kas-info">
-        <small>Total Kas (Termasuk Saldo Bulan Lalu)</small>
-        <h2 id="totalKas">Rp 0</h2>
-
-        <div class="detail-pengeluaran">
-            <small style="font-weight: bold; color: var(--danger);">RINCIAN KEUANGAN:</small>
-            <div id="listKeluar" style="font-size: 13px; margin: 8px 0; line-height: 1.6;">Memuat data...</div>
-            
-            <div class="sisa-box">
-                <span style="font-weight: bold;">SISA SALDO:</span>
-                <span id="sisaKas" style="font-size: 18px; font-weight: bold;">Rp 0</span>
-            </div>
-        </div>
-    </div>
-
-    <div class="rekap-box">
-        <small style="font-weight: bold; color: var(--primary);">REKAP PENDAPATAN BULANAN:</small>
-        <table class="rekap-table">
-            <thead>
-                <tr>
-                    <th>Bulan</th>
-                    <th>Total Masuk</th>
-                </tr>
-            </thead>
-            <tbody id="listRekapBulan">
-                <tr><td colspan="2">Memuat rekap...</td></tr>
-            </tbody>
-        </table>
-    </div>
-</div>
-
 <script>
     const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSqOacaVgTEVIQdIOgsacKIqQtqfTqUH5F_UMoI5R6ci5fxg2Px6BHrdlfntfdR7Md7T3TshmUHtG7V/pub?gid=0&single=true&output=csv';
 
@@ -109,13 +12,8 @@
     function gantiMode() {
         document.body.classList.toggle('dark-mode');
         const isDark = document.body.classList.contains('dark-mode');
-        if (isDark) {
-            localStorage.setItem('darkMode', 'aktif');
-            document.getElementById('txtM').innerText = "☀️ Mode Terang";
-        } else {
-            localStorage.setItem('darkMode', 'nonaktif');
-            document.getElementById('txtM').innerText = "🌙 Mode Gelap";
-        }
+        localStorage.setItem('darkMode', isDark ? 'aktif' : 'nonaktif');
+        document.getElementById('txtM').innerText = isDark ? "☀️ Mode Terang" : "🌙 Mode Gelap";
     }
 
     function parseCSV(text) {
@@ -130,11 +28,13 @@
             const rawData = await resp.text();
             window.db = parseCSV(rawData);
 
+            // 1. Ambil Pengumuman (Kolom E = indeks 4)
             if (window.db[1] && window.db[1][4]) {
                 document.getElementById('pBox').style.display = 'block';
                 document.getElementById('pIsi').innerText = window.db[1][4];
             }
 
+            // 2. Ambil Saldo Bulan Lalu (Kolom H = indeks 7)
             let saldoAwal = 0;
             if (window.db[1] && window.db[1][7]) {
                 saldoAwal = parseInt(window.db[1][7].replace(/[^0-9]/g, '')) || 0;
@@ -144,33 +44,29 @@
             let rekapBulanan = {};
 
             for(let i=1; i < window.db.length; i++) {
+                // Ambil Nominal Iuran (Kolom D = indeks 3)
                 if(window.db[i][3]) {
                     let nom = parseInt(window.db[i][3].replace(/[^0-9]/g, '')) || 0;
-                    let bln = window.db[i][2];
+                    let bln = window.db[i][2]; // Kolom C = indeks 2 (Bulan)
                     
                     iuranBaru += nom;
-
-                    // Hitung per bulan
-                    if (bln && bln.trim() !== "") {
+                    if (bln) {
                         rekapBulanan[bln] = (rekapBulanan[bln] || 0) + nom;
                     }
                 }
             }
 
-            // Tampilkan Rekap Bulanan
+            // Tampilkan Tabel Rekap
             let rekapHTML = "";
             const urutanBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-            
             urutanBulan.forEach(b => {
                 if (rekapBulanan[b]) {
-                    rekapHTML += `<tr>
-                        <td>${b}</td>
-                        <td>Rp ${rekapBulanan[b].toLocaleString('id-ID')}</td>
-                    </tr>`;
+                    rekapHTML += `<tr><td>${b}</td><td>Rp ${rekapBulanan[b].toLocaleString('id-ID')}</td></tr>`;
                 }
             });
-            document.getElementById('listRekapBulan').innerHTML = rekapHTML || "<tr><td colspan='2'>Belum ada data iuran</td></tr>";
+            document.getElementById('listRekapBulan').innerHTML = rekapHTML || "<tr><td colspan='2'>Belum ada iuran</td></tr>";
 
+            // 3. Hitung Pengeluaran (Kolom G = indeks 6)
             let totalKotor = saldoAwal + iuranBaru;
             document.getElementById('totalKas').innerText = "Rp " + totalKotor.toLocaleString('id-ID');
 
@@ -182,8 +78,8 @@
             }
 
             for (let i = 1; i < window.db.length; i++) {
-                let teksKeluar = window.db[i][5];
-                let angkaKeluar = window.db[i][6];
+                let teksKeluar = window.db[i][5]; // Kolom F = indeks 5 (Keterangan Keluar)
+                let angkaKeluar = window.db[i][6]; // Kolom G = indeks 6 (Nominal Keluar)
                 if (teksKeluar && teksKeluar.trim() !== "") {
                     let nomKeluar = parseInt(angkaKeluar.replace(/[^0-9]/g, '')) || 0;
                     totalKeluar += nomKeluar;
@@ -192,26 +88,33 @@
             }
 
             document.getElementById('listKeluar').innerHTML = rincianHTML || "Belum ada catatan keuangan.";
-            let sisaSaldo = totalKotor - totalKeluar;
-            document.getElementById('sisaKas').innerText = "Rp " + sisaSaldo.toLocaleString('id-ID');
+            document.getElementById('sisaKas').innerText = "Rp " + (totalKotor - totalKeluar).toLocaleString('id-ID');
 
-        } catch (err) { console.error("Gagal memuat"); }
+        } catch (err) { 
+            console.error("Gagal memuat data:", err);
+            document.getElementById('listKeluar').innerText = "Gagal memuat data dari server.";
+        }
     }
 
     function cariData() {
         const query = document.getElementById('inNama').value.toLowerCase().trim();
         const grid = document.getElementById('gridBulan');
         const head = document.getElementById('resHead');
+        
         if (query.length < 3) { grid.innerHTML = ""; head.style.display = "none"; return; }
+        
         let matches = [];
         let displayNama = "";
+        
         window.db.forEach((row, idx) => {
             if (idx === 0) return;
+            // Cari di Kolom B (indeks 1)
             if (row[1] && row[1].toLowerCase().includes(query)) {
                 matches.push({ bulan: row[2], tanggal: row[0] });
                 displayNama = row[1].toUpperCase(); 
             }
         });
+
         if (matches.length > 0) {
             head.style.display = "block";
             document.getElementById('resNama').innerText = displayNama;
@@ -220,12 +123,12 @@
             const bulanFull = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
             
             grid.innerHTML = "";
-            bulanArr.forEach((b, index) => {
-                const bayar = matches.find(m => m.bulan && m.bulan.toLowerCase() === bulanFull[index].toLowerCase());
+            bulanFull.forEach((blnFull, index) => {
+                const bayar = matches.find(m => m.bulan && m.bulan.toLowerCase() === blnFull.toLowerCase());
                 const div = document.createElement('div');
                 div.className = `card ${bayar ? 'lunas' : 'belum'}`;
                 div.innerHTML = `
-                    <div style="font-size:10px; font-weight:bold">${b}</div>
+                    <div style="font-size:10px; font-weight:bold">${bulanArr[index]}</div>
                     <div style="font-size:18px; margin:3px 0">${bayar ? '✅' : '❌'}</div>
                     <div style="font-size:8px; font-weight:bold">${bayar ? 'LUNAS' : 'BELUM'}</div>
                     ${bayar ? `<span class="tgl">${bayar.tanggal}</span>` : ''}
@@ -239,5 +142,3 @@
     }
     init();
 </script>
-</body>
-</html>
