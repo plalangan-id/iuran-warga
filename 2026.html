@@ -1,11 +1,12 @@
 <script>
+    // URL CSV Anda
     const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSqOacaVgTEVIQdIOgsacKIqQtqfTqUH5F_UMoI5R6ci5fxg2Px6BHrdlfntfdR7Md7T3TshmUHtG7V/pub?gid=0&single=true&output=csv';
 
     function cekModeTersimpan() {
         const statusMode = localStorage.getItem('darkMode');
         if (statusMode === 'aktif') {
             document.body.classList.add('dark-mode');
-            document.getElementById('txtM').innerText = "☀️ Mode Terang";
+            if(document.getElementById('txtM')) document.getElementById('txtM').innerText = "☀️ Mode Terang";
         }
     }
 
@@ -13,10 +14,11 @@
         document.body.classList.toggle('dark-mode');
         const isDark = document.body.classList.contains('dark-mode');
         localStorage.setItem('darkMode', isDark ? 'aktif' : 'nonaktif');
-        document.getElementById('txtM').innerText = isDark ? "☀️ Mode Terang" : "🌙 Mode Gelap";
+        if(document.getElementById('txtM')) document.getElementById('txtM').innerText = isDark ? "☀️ Mode Terang" : "🌙 Mode Gelap";
     }
 
     function parseCSV(text) {
+        if(!text) return [];
         const regex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/;
         return text.split(/\r?\n/).map(line => line.split(regex).map(cell => cell.replace(/^"|"$/g, '').trim()));
     }
@@ -28,13 +30,16 @@
             const rawData = await resp.text();
             window.db = parseCSV(rawData);
 
-            // 1. Ambil Pengumuman (Kolom E = indeks 4)
-            if (window.db[1] && window.db[1][4]) {
+            if (!window.db || window.db.length < 2) return;
+
+            // 1. PENGUMUMAN (Kolom E / Indeks 4)
+            const pengumuman = window.db[1][4];
+            if (pengumuman && pengumuman.trim() !== "") {
                 document.getElementById('pBox').style.display = 'block';
-                document.getElementById('pIsi').innerText = window.db[1][4];
+                document.getElementById('pIsi').innerText = pengumuman;
             }
 
-            // 2. Ambil Saldo Bulan Lalu (Kolom H = indeks 7)
+            // 2. SALDO AWAL (Kolom H / Indeks 7)
             let saldoAwal = 0;
             if (window.db[1] && window.db[1][7]) {
                 saldoAwal = parseInt(window.db[1][7].replace(/[^0-9]/g, '')) || 0;
@@ -43,11 +48,15 @@
             let iuranBaru = 0;
             let rekapBulanan = {};
 
+            // Loop Data (Mulai Baris 2)
             for(let i=1; i < window.db.length; i++) {
-                // Ambil Nominal Iuran (Kolom D = indeks 3)
-                if(window.db[i][3]) {
-                    let nom = parseInt(window.db[i][3].replace(/[^0-9]/g, '')) || 0;
-                    let bln = window.db[i][2]; // Kolom C = indeks 2 (Bulan)
+                let baris = window.db[i];
+                if(!baris) continue;
+
+                // Hitung Iuran Masuk (Kolom D / Indeks 3)
+                if(baris[3] && baris[3] !== "") {
+                    let nom = parseInt(baris[3].replace(/[^0-9]/g, '')) || 0;
+                    let bln = baris[2]; // Kolom C (Bulan)
                     
                     iuranBaru += nom;
                     if (bln) {
@@ -64,9 +73,9 @@
                     rekapHTML += `<tr><td>${b}</td><td>Rp ${rekapBulanan[b].toLocaleString('id-ID')}</td></tr>`;
                 }
             });
-            document.getElementById('listRekapBulan').innerHTML = rekapHTML || "<tr><td colspan='2'>Belum ada iuran</td></tr>";
+            document.getElementById('listRekapBulan').innerHTML = rekapHTML || "<tr><td colspan='2'>Belum ada data iuran</td></tr>";
 
-            // 3. Hitung Pengeluaran (Kolom G = indeks 6)
+            // 3. HITUNG PENGELUARAN (Kolom G / Indeks 6)
             let totalKotor = saldoAwal + iuranBaru;
             document.getElementById('totalKas').innerText = "Rp " + totalKotor.toLocaleString('id-ID');
 
@@ -78,9 +87,11 @@
             }
 
             for (let i = 1; i < window.db.length; i++) {
-                let teksKeluar = window.db[i][5]; // Kolom F = indeks 5 (Keterangan Keluar)
-                let angkaKeluar = window.db[i][6]; // Kolom G = indeks 6 (Nominal Keluar)
-                if (teksKeluar && teksKeluar.trim() !== "") {
+                let baris = window.db[i];
+                let teksKeluar = baris[5]; // Kolom F (Keterangan)
+                let angkaKeluar = baris[6]; // Kolom G (Nominal Keluar)
+                
+                if (teksKeluar && teksKeluar.trim() !== "" && angkaKeluar) {
                     let nomKeluar = parseInt(angkaKeluar.replace(/[^0-9]/g, '')) || 0;
                     totalKeluar += nomKeluar;
                     rincianHTML += `• ${teksKeluar} (<span style="color:var(--danger)">-Rp ${nomKeluar.toLocaleString('id-ID')}</span>)<br>`;
@@ -91,8 +102,8 @@
             document.getElementById('sisaKas').innerText = "Rp " + (totalKotor - totalKeluar).toLocaleString('id-ID');
 
         } catch (err) { 
-            console.error("Gagal memuat data:", err);
-            document.getElementById('listKeluar').innerText = "Gagal memuat data dari server.";
+            console.error("Error Detail:", err);
+            alert("Terjadi kesalahan pembacaan data. Pastikan Google Sheets sudah di-Publish ke Web sebagai CSV.");
         }
     }
 
@@ -101,15 +112,19 @@
         const grid = document.getElementById('gridBulan');
         const head = document.getElementById('resHead');
         
-        if (query.length < 3) { grid.innerHTML = ""; head.style.display = "none"; return; }
+        if (query.length < 3) { 
+            grid.innerHTML = ""; 
+            head.style.display = "none"; 
+            return; 
+        }
         
         let matches = [];
         let displayNama = "";
         
         window.db.forEach((row, idx) => {
-            if (idx === 0) return;
-            // Cari di Kolom B (indeks 1)
-            if (row[1] && row[1].toLowerCase().includes(query)) {
+            if (idx === 0 || !row[1]) return;
+            // Cari di Kolom B (Nama)
+            if (row[1].toLowerCase().includes(query)) {
                 matches.push({ bulan: row[2], tanggal: row[0] });
                 displayNama = row[1].toUpperCase(); 
             }
@@ -140,5 +155,7 @@
             head.style.display = "none";
         }
     }
-    init();
+    
+    // Jalankan aplikasi
+    window.onload = init;
 </script>
